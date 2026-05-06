@@ -1,12 +1,15 @@
-# Pharma Tool Strategy
+# Pharmaceutical Development Ontology
 
-An English Streamlit app for exploring pharmaceutical company needs and prioritizing tool development opportunities across:
+An English Streamlit app for exploring the pharmaceutical development process as an ontology.
 
-- CMC evidence structuring
-- Analytical method and specification intelligence
-- Lifecycle change impact analysis
-- NAMs regulatory evidence readiness
-- AI model credibility documentation
+The app provides a clickable process menu and detailed pages for each ontology item, including:
+
+- Definition and detailed information
+- Key data elements
+- CTD / evidence location
+- Related ICH and FDA guidelines
+- Guideline rationale explaining why each guideline applies
+- Ontology relationship examples
 
 ## Run locally
 
@@ -21,4 +24,3 @@ streamlit run app.py
 2. Go to https://share.streamlit.io/.
 3. Select the repository, branch, and `app.py`.
 4. Deploy.
-
