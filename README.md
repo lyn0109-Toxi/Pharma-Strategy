@@ -4,7 +4,8 @@ An English Streamlit app for exploring the pharmaceutical development process as
 
 The app provides a clickable process menu and detailed pages for each ontology item, including:
 
-- A modern SVG-based visual ontology process map at the top of the app
+- A modern SVG-based visual ontology evidence map at the top of the app
+- Concrete sub-concepts inside each process node, such as CQA, CPP, specifications, methods, CTD, DMF, PQ-CMC, NAMs, and AI
 - Stage selector cards for moving through the development process
 - Definition and detailed information
 - Key data elements

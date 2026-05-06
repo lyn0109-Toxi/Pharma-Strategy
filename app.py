@@ -537,34 +537,45 @@ def render_list_card(title, values, css_class="list-card"):
 
 def render_process_image(selected_category):
     nodes = [
-        ("01", "Drug Entity", "Material identity", 70, 96),
-        ("02", "Development", "Product design", 350, 96),
-        ("03", "Manufacturing", "Process control", 630, 96),
-        ("04", "Quality", "Evidence loop", 910, 96),
-        ("05", "Stability", "Shelf-life proof", 910, 310),
-        ("06", "Safety / Efficacy", "Benefit-risk", 630, 310),
-        ("07", "Regulatory Docs", "CTD / DMF", 350, 310),
-        ("08", "Risk / Lifecycle", "QRM and change", 70, 310),
-        ("09", "Modernization", "PQ-CMC / NAMs / AI", 490, 500),
+        ("01", "Drug Entity", "API · Product · Excipient", "Origin / composition", "Material attributes", "Impurity profile", "Q11 / Q7 / Q8", 62, 96),
+        ("02", "Development", "QTPP · CQA · CMA/CPP", "Formulation logic", "Process understanding", "Control strategy", "Q8 / Q9", 338, 96),
+        ("03", "Manufacturing", "Unit operation · PV", "Process flow", "Critical steps", "Batch evidence", "Q8 / Q10 / Q13", 614, 96),
+        ("04", "Quality System", "Spec · Method · Impurity", "Acceptance criteria", "Validation", "QC controls", "Q6 / Q2 / Q14", 890, 96),
+        ("05", "Stability", "Study · Shelf life · Storage", "Long-term data", "Degradation trend", "Label condition", "Q1", 890, 318),
+        ("06", "Safety / Efficacy", "Nonclinical · Clinical", "Toxicology", "Clinical endpoints", "Benefit-risk", "M3 / S / E", 614, 318),
+        ("07", "Regulatory Docs", "CTD · DMF · QOS", "Module 3", "Supplier evidence", "Submission map", "M4 / PQ-CMC", 338, 318),
+        ("08", "Risk / Lifecycle", "QRM · PQS · Change", "Risk review", "CAPA / deviation", "Post-approval change", "Q9 / Q10 / Q12", 62, 318),
+        ("09", "FDA Modernization", "PQ-CMC · NAMs · AI", "Structured CMC data", "Human-relevant evidence", "Model credibility", "FDA / ICH", 476, 542),
     ]
     selected_number = selected_category.split(".", 1)[0].zfill(2)
     node_svg = []
-    for number, title, subtitle, x, y in nodes:
+    for number, title, subtitle, line1, line2, line3, guide, x, y in nodes:
         active = number == selected_number
         fill = "#172126" if active else "#fffdf8"
         stroke = "#172126" if active else "#d9d1c1"
         title_color = "#ffffff" if active else "#1d2528"
         sub_color = "#c7d9d3" if active else "#687477"
+        text_color = "#edf6f2" if active else "#344144"
         badge_fill = "#2e715e" if active else "#e7f2ec"
         badge_color = "#ffffff" if active else "#1f6f55"
+        guide_fill = "#ffffff" if active else "#e8f1f8"
+        guide_color = "#1f6f55" if active else "#236b9a"
         node_svg.append(
             f"""
             <g>
-                <rect x="{x}" y="{y}" width="210" height="112" rx="14" fill="{fill}" stroke="{stroke}" stroke-width="2"/>
+                <rect x="{x}" y="{y}" width="238" height="148" rx="16" fill="{fill}" stroke="{stroke}" stroke-width="2"/>
                 <rect x="{x + 18}" y="{y + 18}" width="42" height="28" rx="7" fill="{badge_fill}"/>
                 <text x="{x + 39}" y="{y + 37}" text-anchor="middle" font-size="13" font-weight="700" fill="{badge_color}">{number}</text>
-                <text x="{x + 18}" y="{y + 68}" font-size="20" font-weight="800" fill="{title_color}">{title}</text>
-                <text x="{x + 18}" y="{y + 94}" font-size="14" fill="{sub_color}">{subtitle}</text>
+                <text x="{x + 72}" y="{y + 38}" font-size="18" font-weight="800" fill="{title_color}">{title}</text>
+                <text x="{x + 18}" y="{y + 68}" font-size="13" font-weight="700" fill="{sub_color}">{subtitle}</text>
+                <circle cx="{x + 24}" cy="{y + 91}" r="3.2" fill="#2e715e"/>
+                <text x="{x + 36}" y="{y + 96}" font-size="12.5" fill="{text_color}">{line1}</text>
+                <circle cx="{x + 24}" cy="{y + 112}" r="3.2" fill="#2e715e"/>
+                <text x="{x + 36}" y="{y + 117}" font-size="12.5" fill="{text_color}">{line2}</text>
+                <circle cx="{x + 24}" cy="{y + 133}" r="3.2" fill="#2e715e"/>
+                <text x="{x + 36}" y="{y + 138}" font-size="12.5" fill="{text_color}">{line3}</text>
+                <rect x="{x + 142}" y="{y + 112}" width="78" height="24" rx="7" fill="{guide_fill}"/>
+                <text x="{x + 181}" y="{y + 128}" text-anchor="middle" font-size="10.5" font-weight="800" fill="{guide_color}">{guide}</text>
             </g>
             """
         )
@@ -574,11 +585,11 @@ def render_process_image(selected_category):
         <div class="visual-map-head">
             <div>
                 <span class="eyebrow">Ontology image map</span>
-                <h2>From material identity to lifecycle evidence</h2>
+                <h2>Concrete evidence map for pharmaceutical development</h2>
             </div>
-            <p>Use the visual map for orientation, then choose a stage below to inspect its evidence and guideline basis.</p>
+            <p>Each node shows the ontology objects, the evidence it must hold, and the guideline family that justifies control.</p>
         </div>
-        <svg viewBox="0 0 1190 650" role="img" aria-label="Pharmaceutical development ontology process map">
+        <svg viewBox="0 0 1190 760" role="img" aria-label="Detailed pharmaceutical development ontology evidence map">
             <defs>
                 <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
                     <path d="M0,0 L0,6 L8,3 z" fill="#2e715e" />
@@ -587,16 +598,27 @@ def render_process_image(selected_category):
                     <feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#172126" flood-opacity="0.12"/>
                 </filter>
             </defs>
-            <rect x="24" y="34" width="1142" height="580" rx="24" fill="#f6f1e7" stroke="#ddd5c4"/>
-            <path d="M280 152 H345" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M560 152 H625" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M840 152 H905" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M1015 208 V304" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M910 366 H845" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M630 366 H565" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M350 366 H285" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M175 422 C210 500, 325 544, 480 552" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
-            <path d="M700 552 C855 544, 990 486, 1015 422" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+            <rect x="24" y="34" width="1142" height="690" rx="26" fill="#f6f1e7" stroke="#ddd5c4"/>
+            <rect x="48" y="62" width="1094" height="38" rx="12" fill="#172126"/>
+            <text x="70" y="87" font-size="15" font-weight="800" fill="#ffffff">Development evidence flow</text>
+            <text x="945" y="87" font-size="13" fill="#d6e4df">Material → Product → Process → Quality → Lifecycle</text>
+            <path d="M300 170 H333" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M576 170 H609" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M852 170 H885" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M1009 244 V312" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M890 392 H857" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M614 392 H581" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M338 392 H305" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M181 466 C220 532, 330 596, 470 612" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+            <path d="M714 612 C860 596, 982 530, 1008 466" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+            <rect x="66" y="690" width="238" height="24" rx="8" fill="#e7f2ec"/>
+            <text x="185" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#1f6f55">Q8/Q9 knowledge foundation</text>
+            <rect x="338" y="690" width="238" height="24" rx="8" fill="#e8f1f8"/>
+            <text x="457" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#236b9a">Q6/Q2/Q14 analytical control</text>
+            <rect x="614" y="690" width="238" height="24" rx="8" fill="#f4ecd9"/>
+            <text x="733" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#9a6a1f">M4/CTD regulatory evidence</text>
+            <rect x="890" y="690" width="238" height="24" rx="8" fill="#f5e6e1"/>
+            <text x="1009" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#ad4f3f">FDA modernization layer</text>
             <g filter="url(#softShadow)">
                 {''.join(node_svg)}
             </g>
