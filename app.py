@@ -541,7 +541,6 @@ def render_list_card(title, values, css_class="list-card"):
 
 def render_process_image(selected_category=None):
     image_path = Path(__file__).parent / "assets" / "ontology_map.png"
-    encoded_image = base64.b64encode(image_path.read_bytes()).decode("ascii")
     zones = [
         ("1. Drug Entity", 6.2, 10.5, 26.0, 28.0),
         ("2. Pharmaceutical Development", 35.2, 10.5, 18.0, 28.0),
@@ -563,6 +562,27 @@ def render_process_image(selected_category=None):
                aria-label="Open {category}"></a>
             """
         )
+    if image_path.exists():
+        map_visual = f'<img src="data:image/png;base64,{base64.b64encode(image_path.read_bytes()).decode("ascii")}" alt="Pharmaceutical development ontology map" />'
+    else:
+        fallback_nodes = "".join(
+            [
+                f"""
+                <a class="fallback-node" href="?category={quote(category)}" target="_parent">
+                    <span>{category.split(".", 1)[0]}</span>
+                    <strong>{category.split(".", 1)[1].strip().upper()}</strong>
+                </a>
+                """
+                for category, *_ in zones
+            ]
+        )
+        map_visual = f"""
+        <div class="fallback-map">
+            <h1>PHARMACEUTICAL DEVELOPMENT ONTOLOGY MAP</h1>
+            <div class="fallback-flow">DEVELOPMENT EVIDENCE FLOW</div>
+            <div class="fallback-grid">{fallback_nodes}</div>
+        </div>
+        """
 
     html = f"""
     <style>
@@ -585,6 +605,70 @@ def render_process_image(selected_category=None):
             height: auto;
             user-select: none;
         }}
+        .fallback-map {{
+            min-height: 720px;
+            padding: 34px;
+            background: linear-gradient(135deg, #123d61 0%, #f8fbfc 28%, #eef7f1 100%);
+        }}
+        .fallback-map h1 {{
+            margin: 0 0 28px 0;
+            color: white;
+            font-size: 46px;
+            line-height: 1.08;
+            text-align: center;
+            font-weight: 950;
+            letter-spacing: 1px;
+        }}
+        .fallback-flow {{
+            margin: 0 auto 26px auto;
+            max-width: 820px;
+            padding: 14px 24px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
+            color: #17364a;
+            font-size: 24px;
+            font-weight: 950;
+            text-align: center;
+        }}
+        .fallback-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }}
+        .fallback-node {{
+            display: grid;
+            grid-template-columns: 58px 1fr;
+            align-items: center;
+            gap: 16px;
+            min-height: 112px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 4px solid rgba(120, 166, 189, 0.9);
+            color: #10222a;
+            text-decoration: none;
+            box-shadow: 0 12px 26px rgba(8, 32, 51, 0.13);
+        }}
+        .fallback-node:hover {{
+            border-color: #f2c84b;
+            transform: translateY(-3px);
+        }}
+        .fallback-node span {{
+            display: grid;
+            place-items: center;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #174b78;
+            color: white;
+            font-size: 30px;
+            font-weight: 950;
+        }}
+        .fallback-node strong {{
+            font-size: 27px;
+            line-height: 1.05;
+            font-weight: 950;
+        }}
         .map-zone {{
             position: absolute;
             display: block;
@@ -604,7 +688,7 @@ def render_process_image(selected_category=None):
         }}
     </style>
     <div class="map-shell">
-        <img src="data:image/png;base64,{encoded_image}" alt="Pharmaceutical development ontology map" />
+        {map_visual}
         {''.join(links)}
     </div>
     """
