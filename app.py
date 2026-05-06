@@ -594,24 +594,29 @@ def render_list_card(title, values, css_class="list-card"):
 
 def render_process_image(selected_category=None):
     zones = [
-        ("1. Drug Entity", 6.2, 10.5, 26.0, 28.0),
-        ("2. Pharmaceutical Development", 35.2, 10.5, 18.0, 28.0),
-        ("3. Manufacturing Process", 54.4, 10.5, 18.0, 28.0),
-        ("4. Quality System", 74.0, 10.5, 20.0, 28.0),
-        ("5. Stability", 74.0, 39.0, 20.0, 17.5),
-        ("6. Safety and Efficacy", 7.6, 44.0, 27.0, 44.0),
-        ("7. Regulatory Documentation", 34.5, 58.0, 19.5, 29.0),
-        ("8. Risk and Lifecycle", 54.5, 58.0, 19.0, 29.0),
-        ("9. FDA Modernization", 73.5, 59.0, 20.0, 28.0),
+        ("1. Drug Entity", "Drug", 6.2, 10.5, 26.0, 28.0),
+        ("2. Pharmaceutical Development", "Dev", 35.2, 10.5, 18.0, 28.0),
+        ("3. Manufacturing Process", "Mfg", 54.4, 10.5, 18.0, 28.0),
+        ("4. Quality System", "Quality", 74.0, 10.5, 20.0, 28.0),
+        ("5. Stability", "Stability", 74.0, 39.0, 20.0, 17.5),
+        ("6. Safety and Efficacy", "Safety", 7.6, 44.0, 27.0, 44.0),
+        ("7. Regulatory Documentation", "Docs", 34.5, 58.0, 19.5, 29.0),
+        ("8. Risk and Lifecycle", "Risk", 54.5, 58.0, 19.0, 29.0),
+        ("9. FDA Modernization", "FDA", 73.5, 59.0, 20.0, 28.0),
     ]
     links = []
-    for category, left, top, width, height in zones:
+    for category, label, left, top, width, height in zones:
         active = "active" if category == selected_category else ""
         links.append(
             f"""
             <a class="map-zone {active}" href="?category={quote(category)}"
                style="left:{left}%; top:{top}%; width:{width}%; height:{height}%;"
-               aria-label="Open {category}"></a>
+               aria-label="Open {category}">
+                <span class="map-icon">
+                    <i>{category.split(".", 1)[0]}</i>
+                    <b>{label}</b>
+                </span>
+            </a>
             """
         )
     map_visual = f'<img src="data:image/jpeg;base64,{EMBEDDED_MAP_BASE64}" alt="Pharmaceutical development ontology map" />'
@@ -646,13 +651,26 @@ def render_process_image(selected_category=None):
             height: auto;
             user-select: none;
         }}
+        .focus-mask {{
+            position: absolute;
+            left: 39.7%;
+            top: 40.1%;
+            width: 27.2%;
+            height: 5.1%;
+            z-index: 2;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #e8f3f8 0%, #d9ebf3 100%);
+            box-shadow: inset 0 0 0 2px rgba(96, 145, 171, 0.28);
+            pointer-events: none;
+        }}
         .map-zone {{
             position: absolute;
             display: block;
-            z-index: 2;
+            z-index: 3;
             border-radius: 22px;
             outline: 0 solid rgba(242, 200, 75, 0);
             background: rgba(255, 255, 255, 0);
+            text-decoration: none;
             transition: background 140ms ease, box-shadow 140ms ease, outline 140ms ease;
         }}
         .map-zone:hover {{
@@ -664,9 +682,50 @@ def render_process_image(selected_category=None):
             outline: 6px solid rgba(242, 200, 75, 1);
             box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.75);
         }}
+        .map-icon {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+            grid-template-columns: 38px auto;
+            align-items: center;
+            gap: 8px;
+            min-width: 92px;
+            padding: 8px 12px 8px 8px;
+            border-radius: 999px;
+            background: rgba(18, 61, 97, 0.92);
+            color: #ffffff;
+            box-shadow: 0 10px 22px rgba(8, 32, 51, 0.28);
+            border: 2px solid rgba(255, 255, 255, 0.76);
+            transition: transform 140ms ease, background 140ms ease;
+        }}
+        .map-zone:hover .map-icon {{
+            transform: translate(-50%, -50%) scale(1.06);
+            background: rgba(27, 139, 105, 0.96);
+        }}
+        .map-icon i {{
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #f2c84b;
+            color: #17364a;
+            font-style: normal;
+            font-size: 21px;
+            font-weight: 950;
+        }}
+        .map-icon b {{
+            font-size: 15px;
+            line-height: 1;
+            font-weight: 950;
+            white-space: nowrap;
+        }}
     </style>
     <div class="map-shell">
         {map_visual}
+        <div class="focus-mask"></div>
         {''.join(links)}
     </div>
     """
@@ -999,8 +1058,6 @@ if query_category in ONTOLOGY:
     st.session_state.category = query_category
 else:
     render_process_image()
-    st.markdown("<div class='landing-note'>Open detail page</div>", unsafe_allow_html=True)
-    render_landing_navigation()
     st.stop()
 
 
