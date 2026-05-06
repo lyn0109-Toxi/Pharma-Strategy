@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 import streamlit as st
 
 st.set_page_config(
@@ -744,90 +746,98 @@ def open_playbook(playbook_key):
 
 
 def render_landing_navigation():
-    st.markdown(
-        """
-        <div class="map-section">
-            <span>Situation Shortcuts</span>
-            <b>Start from the manufacturing problem you are facing now.</b>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    playbook_cols = st.columns(4)
-    playbook_marks = {
-        "api_supplier_change": "M",
-        "dissolution_failure": "Q",
-        "cqa_spec_method": "D",
-        "post_approval_change": "L",
-    }
-    for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
-        with playbook_cols[index % 4]:
-            mark = playbook_marks[playbook_key]
-            if st.button(
-                f"{mark}  {playbook['label']}\n\n{playbook['category'].split('.', 1)[1].strip()}",
-                key=f"playbook_{playbook_key}",
-                help=f"{playbook['lead']} Linked domain: {playbook['category']}",
-            ):
-                open_playbook(playbook_key)
-
-    st.markdown(
-        """
-        <div class="map-section ontology">
-            <span>Ontology Map</span>
-            <b>Or open a knowledge domain directly. Each node is a clickable evidence object.</b>
-        </div>
-        <div class="flow-spine">
-            <span>Material</span><i></i><span>Product Design</span><i></i><span>Manufacturing</span><i></i><span>Quality Evidence</span><i></i><span>Lifecycle</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
     map_nodes = [
-        ("1. Drug Entity", "01", "Drug Entity", "API | Product | Excipient", "Q11 Q7 Q8", "material", "A"),
-        ("2. Pharmaceutical Development", "02", "Development", "QTPP | CQA | CMA/CPP", "Q8 Q9", "development", "C"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops | Validation", "Q10 Q13", "process", "P"),
-        ("4. Quality System", "04", "Quality System", "Spec | Method | Impurity", "Q6 Q2 Q14", "quality", "Q"),
-        ("5. Stability", "05", "Stability", "Shelf Life | Storage", "Q1", "stability", "T"),
-        ("6. Safety and Efficacy", "06", "Safety & Efficacy", "Nonclinical | Clinical", "M3 S E", "safety", "S"),
-        ("7. Regulatory Documentation", "07", "Regulatory Docs", "CTD | DMF | QOS", "M4 PQ/CMC", "docs", "R"),
-        ("8. Risk and Lifecycle", "08", "Risk & Lifecycle", "QRM | CAPA | Change", "Q9 Q10 Q12", "lifecycle", "L"),
-        ("9. FDA Modernization", "09", "FDA Modernization", "Structured Data | AI | NAMs", "FDA ICH", "modern", "AI"),
+        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8", "material", "molecule"),
+        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9", "development", "design"),
+        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13", "process", "factory"),
+        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14", "quality", "quality"),
+        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1", "stability", "stability"),
+        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E", "safety", "safety"),
+        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC", "docs", "docs"),
+        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12", "lifecycle", "lifecycle"),
+        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH", "modern", "ai"),
     ]
 
-    top_row = st.columns(4)
-    for index, node in enumerate(map_nodes[:4]):
-        category, number, title, objects, guides, theme, mark = node
-        with top_row[index]:
-            if st.button(
-                f"{mark}  {number}  {title}\n\n{objects}\nGuideline: {guides}",
-                key=f"map_node_{category}",
-                help=f"{objects} | Guideline: {guides}",
-            ):
-                open_category(category)
+    icons = {
+        "molecule": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="24" cy="26" r="9"/><circle cx="46" cy="15" r="6"/><circle cx="48" cy="45" r="8"/><circle cx="13" cy="47" r="5"/><path d="M31 22 L41 17 M30 32 L41 40 M20 35 L15 43"/><path d="M36 47c7-14 16-18 21-10 3 5-4 12-14 14"/></svg>
+        """,
+        "design": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M12 52V12M12 52h42"/><path d="M15 48c10-25 19-31 35-31-4 17-12 28-35 31Z"/><path d="M22 41c9-6 18-11 29-24"/><path d="M20 18l5 8 6-15 8 28 5-10 7 6"/></svg>
+        """,
+        "factory": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M11 51h44M16 51V28l11 7V27l12 8V18h10v33"/><path d="M21 42h6M34 42h6M47 42h4M40 18v-6h8v6"/><path d="M18 24h7M43 12h8"/></svg>
+        """,
+        "quality": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="17"/><path d="M41 41l12 12"/><path d="M18 35l7-8 7 4 8-13"/><path d="M17 43h22M49 13h6M49 22h6M49 31h6"/></svg>
+        """,
+        "stability": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M15 52h34M20 52V16h24v36"/><path d="M20 28h24M20 40h24"/><path d="M27 22h10M27 34h10M27 46h10"/></svg>
+        """,
+        "safety": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 10c10 7 17 7 17 7v13c0 13-7 21-17 25-10-4-17-12-17-25V17s7 0 17-7Z"/><path d="M23 33h18M32 24v18"/><path d="M13 52c8-6 13-8 19-8s11 2 19 8"/></svg>
+        """,
+        "docs": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10h22l8 8v36H18Z"/><path d="M40 10v10h8"/><path d="M24 29h17M24 37h17M24 45h11"/><path d="M13 16h5M13 22h5M13 28h5"/></svg>
+        """,
+        "lifecycle": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M19 24a15 15 0 0 1 24-8l4 4"/><path d="M47 12v8h-8"/><path d="M45 40a15 15 0 0 1-24 8l-4-4"/><path d="M17 52v-8h8"/><path d="M24 32c5-8 11 8 16 0"/></svg>
+        """,
+        "ai": """
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M22 18h20a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V24a6 6 0 0 1 6-6Z"/><path d="M25 18v-7M39 18v-7M25 53v-7M39 53v-7M16 27H9M16 38H9M55 27h-7M55 38h-7"/><circle cx="26" cy="31" r="3"/><circle cx="38" cy="31" r="3"/><path d="M25 39c5 3 9 3 14 0"/></svg>
+        """,
+    }
+
+    node_html = []
+    for category, number, title, objects, guides, theme, icon_key in map_nodes:
+        href = f"?category={quote(category)}"
+        node_html.append(
+            f"""
+            <a class="evidence-node {theme}" href="{href}" aria-label="Open {category}">
+                <span class="node-badge">{number}</span>
+                <span class="node-icon">{icons[icon_key]}</span>
+                <strong>{title}</strong>
+                <em>{objects}</em>
+                <small>{guides}</small>
+            </a>
+            """
+        )
 
     st.markdown(
-        """
-        <div class="map-midline">
-            <span>Time-based proof</span>
-            <span>Benefit-risk</span>
-            <span>Submission</span>
-            <span>Change control</span>
-            <span>Modern evidence</span>
+        f"""
+        <div class="evidence-map-shell">
+            <div class="evidence-map-title">
+                <span>Pharmaceutical Development</span>
+                <strong>Ontology Map & Evidence Navigator</strong>
+            </div>
+            <div class="situation-chip">
+                <b>Start Here</b>
+                <span>Click a visual node to open evidence details.</span>
+            </div>
+            <div class="mini-legend">
+                <b>Guideline Layer</b>
+                <span>CMC</span>
+                <span>Quality</span>
+                <span>Regulatory</span>
+                <span>Modern AI</span>
+            </div>
+            <div class="golden-path golden-path-one"></div>
+            <div class="golden-path golden-path-two"></div>
+            <div class="golden-path golden-path-three"></div>
+            <div class="research-core">
+                <span>Evidence Core</span>
+                <b>Control Strategy</b>
+                <i>Guideline-backed decisions</i>
+            </div>
+            <div class="evidence-grid">
+                {''.join(node_html[:4])}
+                <div class="map-spacer"></div>
+                {''.join(node_html[4:])}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-    bottom_row = st.columns(5)
-    for index, node in enumerate(map_nodes[4:]):
-        category, number, title, objects, guides, theme, mark = node
-        with bottom_row[index]:
-            if st.button(
-                f"{mark}  {number}  {title}\n\n{objects}\nGuideline: {guides}",
-                key=f"map_node_{category}",
-                help=f"{objects} | Guideline: {guides}",
-            ):
-                open_category(category)
 
 
 st.markdown(
@@ -1008,6 +1018,348 @@ st.markdown(
         color: #536064;
         font-weight: 800;
         font-size: 0.83rem;
+    }
+    .evidence-map-shell {
+        position: relative;
+        min-height: 46rem;
+        overflow: hidden;
+        border-radius: 1.1rem;
+        border: 1px solid #b7d1df;
+        background:
+            radial-gradient(circle at 11% 12%, rgba(255,255,255,0.92), transparent 12rem),
+            radial-gradient(circle at 64% 53%, rgba(242, 200, 75, 0.28), transparent 13rem),
+            radial-gradient(circle at 88% 19%, rgba(27, 139, 105, 0.18), transparent 12rem),
+            linear-gradient(135deg, #dceff7 0%, #f7fcff 46%, #d8ecf3 100%);
+        box-shadow: 0 26px 62px rgba(8, 32, 51, 0.18);
+        padding: 1.4rem;
+        margin: 0.2rem 0 1rem 0;
+    }
+    .evidence-map-shell:before,
+    .evidence-map-shell:after {
+        content: "";
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.42;
+    }
+    .evidence-map-shell:before {
+        inset: 1.1rem;
+        border: 2px solid rgba(255,255,255,0.82);
+        border-radius: 1rem;
+    }
+    .evidence-map-shell:after {
+        right: 2.2rem;
+        top: 2rem;
+        width: 11rem;
+        height: 7rem;
+        background:
+            linear-gradient(90deg, rgba(18,61,97,0.2) 2px, transparent 2px) 0 0/1.1rem 1.1rem,
+            linear-gradient(rgba(18,61,97,0.16) 2px, transparent 2px) 0 0/1.1rem 1.1rem;
+        mask-image: linear-gradient(90deg, transparent 0%, #000 35%, transparent 100%);
+    }
+    .evidence-map-title {
+        position: relative;
+        z-index: 3;
+        width: min(48rem, 52%);
+        margin: 0 auto;
+        padding: 0.85rem 1.6rem 1rem 1.6rem;
+        text-align: center;
+        border-radius: 0 0 2.2rem 2.2rem;
+        background: rgba(255,255,255,0.78);
+        border: 2px solid rgba(255,255,255,0.94);
+        box-shadow: 0 12px 30px rgba(8, 32, 51, 0.1);
+    }
+    .evidence-map-title span {
+        display: block;
+        color: #123d61;
+        font-size: 2.45rem;
+        font-weight: 950;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+    .evidence-map-title strong {
+        display: block;
+        margin-top: 0.25rem;
+        color: #17364a;
+        font-size: 1.35rem;
+        line-height: 1.1;
+        text-transform: uppercase;
+    }
+    .situation-chip, .mini-legend {
+        position: absolute;
+        z-index: 4;
+        top: 1.55rem;
+        border-radius: 0.8rem;
+        color: white;
+        box-shadow: 0 14px 30px rgba(8, 32, 51, 0.19);
+    }
+    .situation-chip {
+        left: 1.65rem;
+        width: 16rem;
+        padding: 0.95rem 1rem;
+        background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
+    }
+    .situation-chip b, .mini-legend b {
+        display: block;
+        font-size: 1.05rem;
+        margin-bottom: 0.28rem;
+    }
+    .situation-chip span {
+        color: #d8eadf;
+        font-size: 0.95rem;
+        font-weight: 750;
+        line-height: 1.25;
+    }
+    .mini-legend {
+        right: 1.65rem;
+        width: 12rem;
+        padding: 0.8rem;
+        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
+    }
+    .mini-legend span {
+        display: block;
+        padding: 0.25rem 0.5rem;
+        margin-top: 0.24rem;
+        border-radius: 0.35rem;
+        background: rgba(255,255,255,0.15);
+        font-weight: 850;
+        color: #f8fbfc;
+    }
+    .golden-path {
+        position: absolute;
+        z-index: 1;
+        left: 6%;
+        right: 6%;
+        height: 0.38rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 44%, #1b8b69 70%, #236b9a 100%);
+        box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
+    }
+    .golden-path-one { top: 12.6rem; }
+    .golden-path-two {
+        top: 25.2rem;
+        left: 8%;
+        right: 8%;
+        opacity: 0.68;
+    }
+    .golden-path-three {
+        top: 36.2rem;
+        left: 13%;
+        right: 12%;
+        opacity: 0.58;
+    }
+    .research-core {
+        position: absolute;
+        z-index: 2;
+        left: 50%;
+        top: 20.2rem;
+        transform: translateX(-50%);
+        width: 21rem;
+        height: 9.5rem;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle, rgba(255,255,255,0.96) 0%, rgba(232,244,251,0.9) 62%, rgba(242,200,75,0.22) 100%);
+        border: 3px solid rgba(242, 200, 75, 0.7);
+        box-shadow: 0 0 35px rgba(242, 200, 75, 0.45);
+    }
+    .research-core span {
+        display: block;
+        color: #236b9a;
+        font-weight: 950;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    .research-core b {
+        display: block;
+        color: #172126;
+        font-size: 1.55rem;
+        line-height: 1.05;
+    }
+    .research-core i {
+        display: block;
+        color: #536064;
+        font-style: normal;
+        font-weight: 800;
+        font-size: 0.85rem;
+    }
+    .evidence-grid {
+        position: relative;
+        z-index: 3;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+        padding: 1rem 0.6rem 0.4rem 0.6rem;
+    }
+    .map-spacer {
+        grid-column: 1 / -1;
+        min-height: 9.4rem;
+    }
+    .evidence-node {
+        position: relative;
+        display: grid;
+        min-height: 12rem;
+        align-content: start;
+        gap: 0.42rem;
+        padding: 1rem;
+        border-radius: 1rem;
+        color: #172126;
+        text-decoration: none;
+        overflow: hidden;
+        isolation: isolate;
+        border: 2px solid rgba(255,255,255,0.76);
+        box-shadow: 0 18px 36px rgba(8, 32, 51, 0.13);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    }
+    .evidence-node:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 24px 48px rgba(8, 32, 51, 0.2);
+        filter: saturate(1.08);
+        text-decoration: none;
+    }
+    .evidence-node:before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.68) 100%);
+    }
+    .evidence-node:after {
+        content: "";
+        position: absolute;
+        right: -3.5rem;
+        bottom: -3.7rem;
+        width: 10rem;
+        height: 10rem;
+        z-index: -1;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.35);
+    }
+    .node-badge {
+        position: absolute;
+        left: 0.9rem;
+        top: 0.85rem;
+        display: grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 50%;
+        color: white;
+        background: rgba(18, 61, 97, 0.94);
+        font-size: 1rem;
+        font-weight: 950;
+        box-shadow: 0 8px 18px rgba(8,32,51,0.22);
+    }
+    .node-icon {
+        display: grid;
+        place-items: center;
+        width: 5.6rem;
+        height: 5.6rem;
+        margin: 1.45rem auto 0.2rem auto;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.84);
+        border: 2px solid rgba(255,255,255,0.92);
+        box-shadow: inset 0 0 0 0.35rem rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
+    }
+    .node-icon svg {
+        width: 3.7rem;
+        height: 3.7rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 3.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .evidence-node strong {
+        display: block;
+        color: #172126;
+        font-size: 1.35rem;
+        font-weight: 950;
+        line-height: 1.05;
+        text-align: center;
+    }
+    .evidence-node em {
+        display: block;
+        color: #29383d;
+        font-size: 0.92rem;
+        font-style: normal;
+        font-weight: 850;
+        line-height: 1.18;
+        text-align: center;
+        min-height: 2.1rem;
+    }
+    .evidence-node small {
+        display: inline-grid;
+        justify-self: center;
+        margin-top: auto;
+        padding: 0.32rem 0.58rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.75);
+        color: #17364a;
+        font-size: 0.75rem;
+        font-weight: 950;
+        text-align: center;
+    }
+    .evidence-node.material { background: linear-gradient(135deg, #dff2fb 0%, #7eb4d4 100%); color: #236b9a; }
+    .evidence-node.development { background: linear-gradient(135deg, #e2f5ec 0%, #63b798 100%); color: #1f6f55; }
+    .evidence-node.process { background: linear-gradient(135deg, #fff0d9 0%, #f39b2f 100%); color: #9a4f19; }
+    .evidence-node.quality { background: linear-gradient(135deg, #e2f4eb 0%, #54a57a 100%); color: #176f58; }
+    .evidence-node.stability { background: linear-gradient(135deg, #fff1d5 0%, #df9c3c 100%); color: #9a6a1f; }
+    .evidence-node.safety { background: linear-gradient(135deg, #e0eef8 0%, #6aa0c9 100%); color: #174b78; }
+    .evidence-node.docs { background: linear-gradient(135deg, #e4f4ed 0%, #4da47b 100%); color: #1f6f55; }
+    .evidence-node.lifecycle { background: linear-gradient(135deg, #fff0df 0%, #e78533 100%); color: #ad5b22; }
+    .evidence-node.modern { background: linear-gradient(135deg, #e8e5f3 0%, #5f78b8 100%); color: #3a4c8a; }
+    @media (max-width: 980px) {
+        .evidence-map-shell {
+            min-height: auto;
+            padding: 1rem;
+        }
+        .evidence-map-title {
+            width: 100%;
+            margin-top: 5.8rem;
+        }
+        .evidence-map-title span {
+            font-size: 1.8rem;
+        }
+        .evidence-map-title strong {
+            font-size: 1.05rem;
+        }
+        .situation-chip, .mini-legend {
+            position: relative;
+            left: auto;
+            right: auto;
+            top: auto;
+            width: 100%;
+            margin-bottom: 0.7rem;
+        }
+        .mini-legend {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.35rem;
+        }
+        .mini-legend b {
+            grid-column: 1 / -1;
+        }
+        .golden-path, .research-core {
+            display: none;
+        }
+        .evidence-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-top: 1rem;
+        }
+        .map-spacer {
+            display: none;
+        }
+    }
+    @media (max-width: 620px) {
+        .evidence-grid {
+            grid-template-columns: 1fr;
+        }
+        .mini-legend {
+            grid-template-columns: 1fr 1fr;
+        }
     }
     .navigator-hero {
         position: relative;
@@ -1605,7 +1957,6 @@ query_playbook = st.query_params.get("playbook")
 if query_category in ONTOLOGY:
     st.session_state.category = query_category
 else:
-    render_process_image()
     render_landing_navigation()
     st.stop()
 
@@ -1641,6 +1992,28 @@ with st.sidebar:
 category_data = ONTOLOGY[category]
 item_data = category_data["items"][item]
 active_playbook = SITUATION_PLAYBOOKS.get(query_playbook)
+
+st.markdown(
+    f"""
+    <div class="finder-panel">
+        <h3>{category} Items</h3>
+        <p>Select a specific ontology item inside this development domain.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+item_columns = st.columns(min(3, len(available_items)))
+for index, available_item in enumerate(available_items):
+    available_data = category_data["items"][available_item]
+    with item_columns[index % len(item_columns)]:
+        if st.button(
+            f"{available_item}\n\n{' / '.join(available_data['guidelines'][:3])}",
+            key=f"domain_item_{category}_{available_item}",
+            help=available_data["definition"],
+        ):
+            st.query_params["category"] = category
+            st.query_params["item"] = available_item
+            st.rerun()
 
 st.markdown(
     """
