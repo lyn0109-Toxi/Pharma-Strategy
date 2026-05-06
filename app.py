@@ -1,5 +1,7 @@
+import base64
 import streamlit.components.v1 as components
 import streamlit as st
+from pathlib import Path
 from urllib.parse import quote
 
 
@@ -7,7 +9,7 @@ st.set_page_config(
     page_title="Pharmaceutical Development Ontology",
     page_icon="P",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 
@@ -537,31 +539,28 @@ def render_list_card(title, values, css_class="list-card"):
     )
 
 
-def render_process_image(selected_category):
-    nodes = [
-        ("1. Drug Entity", "DRUG ENTITY", "API · PRODUCT · EXCIPIENT", "ICH Q11 · Q7 · Q8", "blue"),
-        ("2. Pharmaceutical Development", "DEVELOPMENT", "QTPP · CQA · CMA/CPP", "ICH Q8 · Q9", "green"),
-        ("3. Manufacturing Process", "MANUFACTURING", "UNIT OPS · VALIDATION", "ICH Q10 · Q13", "orange"),
-        ("4. Quality System", "QUALITY SYSTEM", "SPEC · METHOD · IMPURITY", "ICH Q6 · Q2 · Q14", "green"),
-        ("5. Stability", "STABILITY", "SHELF LIFE · STORAGE", "ICH Q1", "green"),
-        ("6. Safety and Efficacy", "SAFETY & EFFICACY", "NONCLINICAL · CLINICAL", "ICH M3 · S · E", "blue"),
-        ("7. Regulatory Documentation", "REGULATORY DOCS", "CTD · DMF · QOS", "ICH M4 · PQ/CMC", "orange"),
-        ("8. Risk and Lifecycle", "RISK & LIFECYCLE", "QRM · CHANGE", "ICH Q9 · Q10 · Q12", "rose"),
-        ("9. FDA Modernization", "FDA MODERNIZATION", "STRUCTURED DATA · AI · NAMs", "FDA · ICH", "purple"),
+def render_process_image(selected_category=None):
+    image_path = Path(__file__).parent / "assets" / "ontology_map.png"
+    encoded_image = base64.b64encode(image_path.read_bytes()).decode("ascii")
+    zones = [
+        ("1. Drug Entity", 6.2, 10.5, 26.0, 28.0),
+        ("2. Pharmaceutical Development", 35.2, 10.5, 18.0, 28.0),
+        ("3. Manufacturing Process", 54.4, 10.5, 18.0, 28.0),
+        ("4. Quality System", 74.0, 10.5, 20.0, 28.0),
+        ("5. Stability", 74.0, 39.0, 20.0, 17.5),
+        ("6. Safety and Efficacy", 7.6, 44.0, 27.0, 44.0),
+        ("7. Regulatory Documentation", 34.5, 58.0, 19.5, 29.0),
+        ("8. Risk and Lifecycle", 54.5, 58.0, 19.0, 29.0),
+        ("9. FDA Modernization", 73.5, 59.0, 20.0, 28.0),
     ]
-    node_html = []
-    for category, title, content, guide, color in nodes:
+    links = []
+    for category, left, top, width, height in zones:
         active = "active" if category == selected_category else ""
-        node_html.append(
+        links.append(
             f"""
-            <a class="map-node {color} {active}" href="?category={quote(category)}" target="_parent">
-                <span class="node-number">{category.split(".", 1)[0]}</span>
-                <span class="node-copy">
-                    <strong>{title}</strong>
-                    <em>{content}</em>
-                    <b>{guide}</b>
-                </span>
-            </a>
+            <a class="map-zone {active}" href="?category={quote(category)}" target="_parent"
+               style="left:{left}%; top:{top}%; width:{width}%; height:{height}%;"
+               aria-label="Open {category}"></a>
             """
         )
 
@@ -572,208 +571,44 @@ def render_process_image(selected_category):
             background: transparent;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }}
-        .click-map {{
-            min-height: 760px;
-            border-radius: 30px;
-            overflow: hidden;
-            background:
-                linear-gradient(135deg, #e8f2f7 0%, #fbfdfe 46%, #eef7f1 100%);
-            border: 1px solid #c6d9e2;
-            box-shadow: 0 22px 48px rgba(8, 32, 51, 0.16);
-        }}
-        .map-title {{
-            background: linear-gradient(90deg, #123d61 0%, #1a775f 100%);
-            color: white;
-            padding: 28px 36px 12px 36px;
-            font-size: 42px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-align: center;
-            line-height: 1.08;
-        }}
-        .map-subtitle {{
-            margin: 0;
-            padding: 0 36px 24px 36px;
-            background: linear-gradient(90deg, #123d61 0%, #1a775f 100%);
-            color: #d8edf6;
-            font-size: 18px;
-            font-weight: 800;
-            text-align: center;
-        }}
-        .map-body {{
-            padding: 30px 34px 26px 34px;
-        }}
-        .route {{
+        .map-shell {{
             position: relative;
-            height: 42px;
-            margin: 0 8px 26px 8px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
-            box-shadow: 0 8px 20px rgba(27, 139, 105, 0.18);
-        }}
-        .route::after {{
-            content: "";
-            position: absolute;
-            right: -18px;
-            top: -5px;
-            border-left: 26px solid #1b8b69;
-            border-top: 26px solid transparent;
-            border-bottom: 26px solid transparent;
-        }}
-        .route-label {{
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translateX(-50%);
-            background: #ffe594;
-            color: #17364a;
-            border: 2px solid #e1bf46;
-            border-radius: 999px;
-            padding: 10px 36px;
-            font-size: 22px;
-            font-weight: 900;
-            white-space: nowrap;
-            margin-top: -24px;
-        }}
-        .map-grid {{
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 18px;
-        }}
-        .map-node {{
-            display: grid;
-            grid-template-columns: 64px 1fr;
-            gap: 18px;
-            align-items: center;
-            min-height: 138px;
-            padding: 22px 24px;
-            border-radius: 22px;
-            text-decoration: none;
-            color: #111f25;
-            background: #ffffff;
-            border: 4px solid rgba(120, 166, 189, 0.85);
-            box-shadow: 0 14px 28px rgba(8, 32, 51, 0.12);
-            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-        }}
-        .map-node:hover {{
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 22px 42px rgba(8, 32, 51, 0.22);
-            border-color: #f2c84b;
-        }}
-        .map-node.active {{
-            border-color: #f2c84b;
-            box-shadow: 0 0 0 7px rgba(242, 200, 75, 0.24), 0 22px 42px rgba(8, 32, 51, 0.22);
-        }}
-        .map-node strong {{
-            display: block;
-            font-size: 31px;
-            font-weight: 950;
-            line-height: 1.02;
-            letter-spacing: 0;
-            color: #0f1e25;
-        }}
-        .map-node em {{
-            display: block;
-            margin-top: 12px;
-            color: #405760;
-            font-size: 20px;
-            font-style: normal;
-            font-weight: 900;
-            line-height: 1.15;
-        }}
-        .map-node b {{
-            display: inline-block;
-            margin-top: 14px;
-            padding: 9px 16px;
-            border-radius: 999px;
-            color: white;
-            font-size: 18px;
-            font-weight: 950;
-        }}
-        .node-number {{
-            width: 64px;
-            height: 64px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            color: white;
-            font-size: 33px;
-            font-weight: 950;
-        }}
-        .blue .node-number, .blue b {{
-            background: #174b78;
-        }}
-        .green .node-number, .green b {{
-            background: #176f58;
-        }}
-        .orange .node-number, .orange b {{
-            background: #d97825;
-        }}
-        .purple .node-number, .purple b {{
-            background: #5b3476;
-        }}
-        .rose .node-number, .rose b {{
-            background: #9a5877;
-        }}
-        .focus {{
-            margin: 0 8px 16px 8px;
-            color: #0f1e25;
-            font-size: 22px;
-            font-weight: 950;
-        }}
-        .bottom-band {{
-            display: grid;
-            grid-template-columns: 1.1fr 1fr 1fr 1fr 1.5fr;
+            width: 100%;
+            border-radius: 24px;
             overflow: hidden;
-            margin-top: 22px;
-            border-radius: 16px;
+            background: #123d61;
+            box-shadow: 0 24px 54px rgba(8, 32, 51, 0.22);
         }}
-        .bottom-band span {{
-            display: grid;
-            place-items: center;
-            min-height: 50px;
-            color: white;
-            font-size: 17px;
-            font-weight: 900;
-            text-align: center;
+        .map-shell img {{
+            display: block;
+            width: 100%;
+            height: auto;
+            user-select: none;
         }}
-        .bottom-band span:nth-child(1) {{ background: #123d61; }}
-        .bottom-band span:nth-child(2) {{ background: #1b8b69; }}
-        .bottom-band span:nth-child(3) {{ background: #df7a24; }}
-        .bottom-band span:nth-child(4) {{ background: #9a5877; }}
-        .bottom-band span:nth-child(5) {{ background: #4c2a68; }}
-        @media (max-width: 980px) {{
-            .map-title {{
-                font-size: 30px;
-            }}
-            .map-grid {{
-                grid-template-columns: 1fr;
-            }}
-            .map-node strong {{
-                font-size: 28px;
-            }}
+        .map-zone {{
+            position: absolute;
+            display: block;
+            border-radius: 22px;
+            outline: 0 solid rgba(242, 200, 75, 0);
+            background: rgba(255, 255, 255, 0);
+            transition: background 140ms ease, box-shadow 140ms ease, outline 140ms ease;
+        }}
+        .map-zone:hover {{
+            background: rgba(255, 229, 148, 0.16);
+            outline: 5px solid rgba(242, 200, 75, 0.9);
+            box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.65);
+        }}
+        .map-zone.active {{
+            outline: 6px solid rgba(242, 200, 75, 1);
+            box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.75);
         }}
     </style>
-    <div class="click-map">
-        <div class="map-title">PHARMACEUTICAL DEVELOPMENT ONTOLOGY MAP</div>
-        <p class="map-subtitle">Large, clickable ontology menu. Each domain opens its evidence page with guideline rationale.</p>
-        <div class="map-body">
-            <div class="route"><div class="route-label">DEVELOPMENT EVIDENCE FLOW</div></div>
-            <div class="focus">RESEARCHER'S FOCUS: YOUNGNAM LEE</div>
-            <div class="map-grid">
-                {''.join(node_html)}
-            </div>
-            <div class="bottom-band">
-                <span>MATERIAL + PRODUCT</span>
-                <span>DEVELOPMENT</span>
-                <span>CMC DOSSIER</span>
-                <span>LIFECYCLE</span>
-                <span>MODERNIZATION</span>
-            </div>
-        </div>
+    <div class="map-shell">
+        <img src="data:image/png;base64,{encoded_image}" alt="Pharmaceutical development ontology map" />
+        {''.join(links)}
     </div>
     """
-    components.html(html, height=850, scrolling=False)
+    components.html(html, height=760, scrolling=False)
 
 
 st.markdown(
@@ -1012,48 +847,18 @@ st.markdown(
 )
 
 
-st.markdown(
-    """
-    <div class="hero">
-        <h1>Pharmaceutical Development Ontology</h1>
-        <p>
-        A visual navigation layer for drug development knowledge: material identity,
-        product design, manufacturing, quality evidence, stability, regulatory
-        documentation, lifecycle risk, and FDA modernization.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-
 query_category = st.query_params.get("category")
 if query_category in ONTOLOGY:
     st.session_state.category = query_category
-elif "category" not in st.session_state:
-    st.session_state.category = list(ONTOLOGY.keys())[0]
+else:
+    render_process_image()
+    st.stop()
 
 
-render_process_image(st.session_state.category)
-
-st.caption("Stage selector")
-first_row = st.columns(5)
-second_row = st.columns(4)
-for index, (stage, caption, guide, theme) in enumerate(PROCESS_FLOW):
-    row = first_row if index < 5 else second_row
-    with row[index if index < 5 else index - 5]:
-        if st.button(stage, key=f"stage_{stage}"):
-            st.session_state.category = stage
-            st.query_params["category"] = stage
-        st.markdown(
-            f"""
-            <div class="stage-caption">
-                {theme}<br><span class="stage-guide">{guide}</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
+if st.button("Back to Ontology Map"):
+    for key in list(st.query_params.keys()):
+        del st.query_params[key]
+    st.rerun()
 
 with st.sidebar:
     st.header("Ontology Menu")
