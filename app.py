@@ -1,4 +1,6 @@
+import streamlit.components.v1 as components
 import streamlit as st
+from urllib.parse import quote
 
 
 st.set_page_config(
@@ -537,95 +539,241 @@ def render_list_card(title, values, css_class="list-card"):
 
 def render_process_image(selected_category):
     nodes = [
-        ("01", "Drug Entity", "API · Product · Excipient", "Origin / composition", "Material attributes", "Impurity profile", "Q11 / Q7 / Q8", 62, 96),
-        ("02", "Development", "QTPP · CQA · CMA/CPP", "Formulation logic", "Process understanding", "Control strategy", "Q8 / Q9", 338, 96),
-        ("03", "Manufacturing", "Unit operation · PV", "Process flow", "Critical steps", "Batch evidence", "Q8 / Q10 / Q13", 614, 96),
-        ("04", "Quality System", "Spec · Method · Impurity", "Acceptance criteria", "Validation", "QC controls", "Q6 / Q2 / Q14", 890, 96),
-        ("05", "Stability", "Study · Shelf life · Storage", "Long-term data", "Degradation trend", "Label condition", "Q1", 890, 318),
-        ("06", "Safety / Efficacy", "Nonclinical · Clinical", "Toxicology", "Clinical endpoints", "Benefit-risk", "M3 / S / E", 614, 318),
-        ("07", "Regulatory Docs", "CTD · DMF · QOS", "Module 3", "Supplier evidence", "Submission map", "M4 / PQ-CMC", 338, 318),
-        ("08", "Risk / Lifecycle", "QRM · PQS · Change", "Risk review", "CAPA / deviation", "Post-approval change", "Q9 / Q10 / Q12", 62, 318),
-        ("09", "FDA Modernization", "PQ-CMC · NAMs · AI", "Structured CMC data", "Human-relevant evidence", "Model credibility", "FDA / ICH", 476, 542),
+        ("1. Drug Entity", "DRUG ENTITY", "API · PRODUCT · EXCIPIENT", "ICH Q11 · Q7 · Q8", "blue"),
+        ("2. Pharmaceutical Development", "DEVELOPMENT", "QTPP · CQA · CMA/CPP", "ICH Q8 · Q9", "green"),
+        ("3. Manufacturing Process", "MANUFACTURING", "UNIT OPS · VALIDATION", "ICH Q10 · Q13", "orange"),
+        ("4. Quality System", "QUALITY SYSTEM", "SPEC · METHOD · IMPURITY", "ICH Q6 · Q2 · Q14", "green"),
+        ("5. Stability", "STABILITY", "SHELF LIFE · STORAGE", "ICH Q1", "green"),
+        ("6. Safety and Efficacy", "SAFETY & EFFICACY", "NONCLINICAL · CLINICAL", "ICH M3 · S · E", "blue"),
+        ("7. Regulatory Documentation", "REGULATORY DOCS", "CTD · DMF · QOS", "ICH M4 · PQ/CMC", "orange"),
+        ("8. Risk and Lifecycle", "RISK & LIFECYCLE", "QRM · CHANGE", "ICH Q9 · Q10 · Q12", "rose"),
+        ("9. FDA Modernization", "FDA MODERNIZATION", "STRUCTURED DATA · AI · NAMs", "FDA · ICH", "purple"),
     ]
-    selected_number = selected_category.split(".", 1)[0].zfill(2)
-    node_svg = []
-    for number, title, subtitle, line1, line2, line3, guide, x, y in nodes:
-        active = number == selected_number
-        fill = "#172126" if active else "#fffdf8"
-        stroke = "#172126" if active else "#d9d1c1"
-        title_color = "#ffffff" if active else "#1d2528"
-        sub_color = "#c7d9d3" if active else "#687477"
-        text_color = "#edf6f2" if active else "#344144"
-        badge_fill = "#2e715e" if active else "#e7f2ec"
-        badge_color = "#ffffff" if active else "#1f6f55"
-        guide_fill = "#ffffff" if active else "#e8f1f8"
-        guide_color = "#1f6f55" if active else "#236b9a"
-        node_svg.append(
+    node_html = []
+    for category, title, content, guide, color in nodes:
+        active = "active" if category == selected_category else ""
+        node_html.append(
             f"""
-            <g>
-                <rect x="{x}" y="{y}" width="238" height="148" rx="16" fill="{fill}" stroke="{stroke}" stroke-width="2"/>
-                <rect x="{x + 18}" y="{y + 18}" width="42" height="28" rx="7" fill="{badge_fill}"/>
-                <text x="{x + 39}" y="{y + 37}" text-anchor="middle" font-size="13" font-weight="700" fill="{badge_color}">{number}</text>
-                <text x="{x + 72}" y="{y + 38}" font-size="18" font-weight="800" fill="{title_color}">{title}</text>
-                <text x="{x + 18}" y="{y + 68}" font-size="13" font-weight="700" fill="{sub_color}">{subtitle}</text>
-                <circle cx="{x + 24}" cy="{y + 91}" r="3.2" fill="#2e715e"/>
-                <text x="{x + 36}" y="{y + 96}" font-size="12.5" fill="{text_color}">{line1}</text>
-                <circle cx="{x + 24}" cy="{y + 112}" r="3.2" fill="#2e715e"/>
-                <text x="{x + 36}" y="{y + 117}" font-size="12.5" fill="{text_color}">{line2}</text>
-                <circle cx="{x + 24}" cy="{y + 133}" r="3.2" fill="#2e715e"/>
-                <text x="{x + 36}" y="{y + 138}" font-size="12.5" fill="{text_color}">{line3}</text>
-                <rect x="{x + 142}" y="{y + 112}" width="78" height="24" rx="7" fill="{guide_fill}"/>
-                <text x="{x + 181}" y="{y + 128}" text-anchor="middle" font-size="10.5" font-weight="800" fill="{guide_color}">{guide}</text>
-            </g>
+            <a class="map-node {color} {active}" href="?category={quote(category)}" target="_parent">
+                <span class="node-number">{category.split(".", 1)[0]}</span>
+                <span class="node-copy">
+                    <strong>{title}</strong>
+                    <em>{content}</em>
+                    <b>{guide}</b>
+                </span>
+            </a>
             """
         )
 
-    svg = f"""
-    <div class="visual-map">
-        <div class="visual-map-head">
-            <div>
-                <span class="eyebrow">Ontology image map</span>
-                <h2>Concrete evidence map for pharmaceutical development</h2>
+    html = f"""
+    <style>
+        body {{
+            margin: 0;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }}
+        .click-map {{
+            min-height: 760px;
+            border-radius: 30px;
+            overflow: hidden;
+            background:
+                linear-gradient(135deg, #e8f2f7 0%, #fbfdfe 46%, #eef7f1 100%);
+            border: 1px solid #c6d9e2;
+            box-shadow: 0 22px 48px rgba(8, 32, 51, 0.16);
+        }}
+        .map-title {{
+            background: linear-gradient(90deg, #123d61 0%, #1a775f 100%);
+            color: white;
+            padding: 28px 36px 12px 36px;
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-align: center;
+            line-height: 1.08;
+        }}
+        .map-subtitle {{
+            margin: 0;
+            padding: 0 36px 24px 36px;
+            background: linear-gradient(90deg, #123d61 0%, #1a775f 100%);
+            color: #d8edf6;
+            font-size: 18px;
+            font-weight: 800;
+            text-align: center;
+        }}
+        .map-body {{
+            padding: 30px 34px 26px 34px;
+        }}
+        .route {{
+            position: relative;
+            height: 42px;
+            margin: 0 8px 26px 8px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
+            box-shadow: 0 8px 20px rgba(27, 139, 105, 0.18);
+        }}
+        .route::after {{
+            content: "";
+            position: absolute;
+            right: -18px;
+            top: -5px;
+            border-left: 26px solid #1b8b69;
+            border-top: 26px solid transparent;
+            border-bottom: 26px solid transparent;
+        }}
+        .route-label {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%);
+            background: #ffe594;
+            color: #17364a;
+            border: 2px solid #e1bf46;
+            border-radius: 999px;
+            padding: 10px 36px;
+            font-size: 22px;
+            font-weight: 900;
+            white-space: nowrap;
+            margin-top: -24px;
+        }}
+        .map-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }}
+        .map-node {{
+            display: grid;
+            grid-template-columns: 64px 1fr;
+            gap: 18px;
+            align-items: center;
+            min-height: 138px;
+            padding: 22px 24px;
+            border-radius: 22px;
+            text-decoration: none;
+            color: #111f25;
+            background: #ffffff;
+            border: 4px solid rgba(120, 166, 189, 0.85);
+            box-shadow: 0 14px 28px rgba(8, 32, 51, 0.12);
+            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+        }}
+        .map-node:hover {{
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 22px 42px rgba(8, 32, 51, 0.22);
+            border-color: #f2c84b;
+        }}
+        .map-node.active {{
+            border-color: #f2c84b;
+            box-shadow: 0 0 0 7px rgba(242, 200, 75, 0.24), 0 22px 42px rgba(8, 32, 51, 0.22);
+        }}
+        .map-node strong {{
+            display: block;
+            font-size: 31px;
+            font-weight: 950;
+            line-height: 1.02;
+            letter-spacing: 0;
+            color: #0f1e25;
+        }}
+        .map-node em {{
+            display: block;
+            margin-top: 12px;
+            color: #405760;
+            font-size: 20px;
+            font-style: normal;
+            font-weight: 900;
+            line-height: 1.15;
+        }}
+        .map-node b {{
+            display: inline-block;
+            margin-top: 14px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            color: white;
+            font-size: 18px;
+            font-weight: 950;
+        }}
+        .node-number {{
+            width: 64px;
+            height: 64px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: white;
+            font-size: 33px;
+            font-weight: 950;
+        }}
+        .blue .node-number, .blue b {{
+            background: #174b78;
+        }}
+        .green .node-number, .green b {{
+            background: #176f58;
+        }}
+        .orange .node-number, .orange b {{
+            background: #d97825;
+        }}
+        .purple .node-number, .purple b {{
+            background: #5b3476;
+        }}
+        .rose .node-number, .rose b {{
+            background: #9a5877;
+        }}
+        .focus {{
+            margin: 0 8px 16px 8px;
+            color: #0f1e25;
+            font-size: 22px;
+            font-weight: 950;
+        }}
+        .bottom-band {{
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1fr 1fr 1.5fr;
+            overflow: hidden;
+            margin-top: 22px;
+            border-radius: 16px;
+        }}
+        .bottom-band span {{
+            display: grid;
+            place-items: center;
+            min-height: 50px;
+            color: white;
+            font-size: 17px;
+            font-weight: 900;
+            text-align: center;
+        }}
+        .bottom-band span:nth-child(1) {{ background: #123d61; }}
+        .bottom-band span:nth-child(2) {{ background: #1b8b69; }}
+        .bottom-band span:nth-child(3) {{ background: #df7a24; }}
+        .bottom-band span:nth-child(4) {{ background: #9a5877; }}
+        .bottom-band span:nth-child(5) {{ background: #4c2a68; }}
+        @media (max-width: 980px) {{
+            .map-title {{
+                font-size: 30px;
+            }}
+            .map-grid {{
+                grid-template-columns: 1fr;
+            }}
+            .map-node strong {{
+                font-size: 28px;
+            }}
+        }}
+    </style>
+    <div class="click-map">
+        <div class="map-title">PHARMACEUTICAL DEVELOPMENT ONTOLOGY MAP</div>
+        <p class="map-subtitle">Large, clickable ontology menu. Each domain opens its evidence page with guideline rationale.</p>
+        <div class="map-body">
+            <div class="route"><div class="route-label">DEVELOPMENT EVIDENCE FLOW</div></div>
+            <div class="focus">RESEARCHER'S FOCUS: YOUNGNAM LEE</div>
+            <div class="map-grid">
+                {''.join(node_html)}
             </div>
-            <p>Each node shows the ontology objects, the evidence it must hold, and the guideline family that justifies control.</p>
+            <div class="bottom-band">
+                <span>MATERIAL + PRODUCT</span>
+                <span>DEVELOPMENT</span>
+                <span>CMC DOSSIER</span>
+                <span>LIFECYCLE</span>
+                <span>MODERNIZATION</span>
+            </div>
         </div>
-        <svg viewBox="0 0 1190 760" role="img" aria-label="Detailed pharmaceutical development ontology evidence map">
-            <defs>
-                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-                    <path d="M0,0 L0,6 L8,3 z" fill="#2e715e" />
-                </marker>
-                <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
-                    <feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#172126" flood-opacity="0.12"/>
-                </filter>
-            </defs>
-            <rect x="24" y="34" width="1142" height="690" rx="26" fill="#f6f1e7" stroke="#ddd5c4"/>
-            <rect x="48" y="62" width="1094" height="38" rx="12" fill="#172126"/>
-            <text x="70" y="87" font-size="15" font-weight="800" fill="#ffffff">Development evidence flow</text>
-            <text x="945" y="87" font-size="13" fill="#d6e4df">Material → Product → Process → Quality → Lifecycle</text>
-            <path d="M300 170 H333" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M576 170 H609" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M852 170 H885" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M1009 244 V312" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M890 392 H857" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M614 392 H581" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M338 392 H305" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
-            <path d="M181 466 C220 532, 330 596, 470 612" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
-            <path d="M714 612 C860 596, 982 530, 1008 466" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
-            <rect x="66" y="690" width="238" height="24" rx="8" fill="#e7f2ec"/>
-            <text x="185" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#1f6f55">Q8/Q9 knowledge foundation</text>
-            <rect x="338" y="690" width="238" height="24" rx="8" fill="#e8f1f8"/>
-            <text x="457" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#236b9a">Q6/Q2/Q14 analytical control</text>
-            <rect x="614" y="690" width="238" height="24" rx="8" fill="#f4ecd9"/>
-            <text x="733" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#9a6a1f">M4/CTD regulatory evidence</text>
-            <rect x="890" y="690" width="238" height="24" rx="8" fill="#f5e6e1"/>
-            <text x="1009" y="706" text-anchor="middle" font-size="11" font-weight="800" fill="#ad4f3f">FDA modernization layer</text>
-            <g filter="url(#softShadow)">
-                {''.join(node_svg)}
-            </g>
-        </svg>
     </div>
     """
-    st.markdown(svg, unsafe_allow_html=True)
+    components.html(html, height=850, scrolling=False)
 
 
 st.markdown(
@@ -879,7 +1027,10 @@ st.markdown(
 )
 
 
-if "category" not in st.session_state:
+query_category = st.query_params.get("category")
+if query_category in ONTOLOGY:
+    st.session_state.category = query_category
+elif "category" not in st.session_state:
     st.session_state.category = list(ONTOLOGY.keys())[0]
 
 
@@ -893,6 +1044,7 @@ for index, (stage, caption, guide, theme) in enumerate(PROCESS_FLOW):
     with row[index if index < 5 else index - 5]:
         if st.button(stage, key=f"stage_{stage}"):
             st.session_state.category = stage
+            st.query_params["category"] = stage
         st.markdown(
             f"""
             <div class="stage-caption">
@@ -912,6 +1064,7 @@ with st.sidebar:
         label_visibility="collapsed",
     )
     st.session_state.category = category
+    st.query_params["category"] = category
     item = st.selectbox("Ontology item", list(ONTOLOGY[category]["items"].keys()))
     st.divider()
     st.caption("Use the menu above as the ontology tree. The selected item opens its detail page.")
