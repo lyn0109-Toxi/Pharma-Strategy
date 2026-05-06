@@ -745,7 +745,7 @@ def render_landing_navigation():
     for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
         with playbook_cols[index % 4]:
             if st.button(
-                playbook["label"],
+                f"{playbook['label']}\n\n{playbook['category'].split('.', 1)[1].strip()}",
                 key=f"playbook_{playbook_key}",
                 help=f"{playbook['lead']} Linked domain: {playbook['category']}",
             ):
@@ -780,7 +780,7 @@ def render_landing_navigation():
         category, number, title, objects, guides = node
         with top_row[index]:
             if st.button(
-                f"{number} {title}",
+                f"{number}  {title}\n\n{objects}\nGuideline: {guides}",
                 key=f"map_node_{category}",
                 help=f"{objects} | Guideline: {guides}",
             ):
@@ -804,7 +804,7 @@ def render_landing_navigation():
         category, number, title, objects, guides = node
         with bottom_row[index]:
             if st.button(
-                f"{number} {title}",
+                f"{number}  {title}\n\n{objects}\nGuideline: {guides}",
                 key=f"map_node_{category}",
                 help=f"{objects} | Guideline: {guides}",
             ):
@@ -1076,15 +1076,16 @@ st.markdown(
     }
     div.stButton > button {
         width: 100%;
-        min-height: 2.7rem;
+        min-height: 7.4rem;
         border-radius: 0.7rem;
         border: 1px solid #cddce3;
         background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
         color: #1d2528;
-        text-align: center;
-        padding: 0.45rem 0.75rem;
+        text-align: left;
+        padding: 0.85rem 0.9rem;
         line-height: 1.22;
         font-weight: 900;
+        white-space: pre-wrap;
         box-shadow: 0 12px 24px rgba(23, 33, 38, 0.07);
     }
     div.stButton > button:hover {
