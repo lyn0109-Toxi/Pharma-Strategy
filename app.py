@@ -530,6 +530,33 @@ PROCESS_FLOW = [
 ]
 
 
+CASE_STUDY = {
+    "title": "Revenue vs Trust: Bioequivalence Risk After Supplier Change",
+    "summary": "A marketed product with major portfolio revenue failed comparative dissolution against the reference product after an API supplier change. Root cause pointed to API particle size distribution variability, requiring supplier requalification, remanufacturing, comparative dissolution, and a post-approval variation dossier.",
+    "decision": "Leadership must decide whether to proactively raise a marketing authorization issue even when short-term revenue may be affected.",
+    "signals": [
+        "API particle size distribution",
+        "supplier qualification",
+        "comparative dissolution",
+        "bioequivalence risk",
+        "post-approval change",
+        "variation dossier",
+        "R&D / Quality / Regulatory / Commercial alignment",
+    ],
+    "category_links": {
+        "1. Drug Entity": "API material attributes, supplier evidence, and DMF/CoA review become the first root-cause layer.",
+        "2. Pharmaceutical Development": "CQA, CMA, and QTPP logic explain why API particle size can affect dissolution performance.",
+        "3. Manufacturing Process": "Re-manufacturing and batch evidence are needed to prove the process restores intended performance.",
+        "4. Quality System": "Dissolution method, specification linkage, and comparative test interpretation become decision-critical.",
+        "5. Stability": "Stability commitments may need review if the new supplier or re-manufactured product changes quality risk.",
+        "6. Safety and Efficacy": "Therapeutic performance and patient trust remain the final business justification.",
+        "7. Regulatory Documentation": "Variation dossier, CTD Module 3 updates, and supplier evidence must be submission-ready.",
+        "8. Risk and Lifecycle": "QRM, change control, CAPA, and stakeholder escalation govern the lifecycle response.",
+        "9. FDA Modernization": "Structured CMC data can make supplier, material attribute, dissolution, and change impact traceable.",
+    },
+}
+
+
 def render_card(title, body, footer=None, accent="green"):
     accent_map = {
         "green": "#2e715e",
@@ -644,6 +671,25 @@ def render_process_image(selected_category=None):
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
+
+def open_category(category):
+    st.query_params["category"] = category
+    if "item" in st.query_params:
+        del st.query_params["item"]
+    st.session_state.category = category
+    st.rerun()
+
+
+def render_landing_navigation():
+    first_row = st.columns(4)
+    second_row = st.columns(5)
+    categories = list(ONTOLOGY.keys())
+    for index, category in enumerate(categories):
+        row = first_row if index < 4 else second_row
+        with row[index if index < 4 else index - 4]:
+            if st.button(category, key=f"landing_{category}"):
+                open_category(category)
 
 
 st.markdown(
@@ -909,6 +955,38 @@ st.markdown(
         font-size: 0.82rem;
         font-weight: 800;
     }
+    .case-panel {
+        border: 1px solid #c9dce6;
+        background: linear-gradient(135deg, #f8fbfc 0%, #eef6f1 100%);
+        padding: 1rem 1.1rem;
+        margin: 0.8rem 0 1rem 0;
+        border-radius: 0.65rem;
+    }
+    .case-panel h3 {
+        margin: 0 0 0.45rem 0;
+        font-size: 1.15rem;
+    }
+    .case-panel p {
+        color: #536064;
+        margin: 0.3rem 0;
+        line-height: 1.42;
+    }
+    .case-signal {
+        display: inline-block;
+        margin: 0.18rem;
+        padding: 0.28rem 0.55rem;
+        border-radius: 999px;
+        background: #e7f2ec;
+        color: #1f6f55;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+    .landing-note {
+        color: #536064;
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin: 0.85rem 0 0.45rem 0;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -921,6 +999,8 @@ if query_category in ONTOLOGY:
     st.session_state.category = query_category
 else:
     render_process_image()
+    st.markdown("<div class='landing-note'>Open detail page</div>", unsafe_allow_html=True)
+    render_landing_navigation()
     st.stop()
 
 
@@ -985,6 +1065,18 @@ if search_term:
                     st.rerun()
     else:
         st.info("No ontology item matched that search term.")
+
+st.markdown(
+    f"""
+    <div class="case-panel">
+        <h3>Process Case Lens: {CASE_STUDY["title"]}</h3>
+        <p>{CASE_STUDY["category_links"].get(category, CASE_STUDY["summary"])}</p>
+        <p><b>Decision lens:</b> {CASE_STUDY["decision"]}</p>
+        {" ".join([f"<span class='case-signal'>{signal}</span>" for signal in CASE_STUDY["signals"]])}
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 primary_guides = " / ".join(item_data["guidelines"][:3])
 st.markdown(
