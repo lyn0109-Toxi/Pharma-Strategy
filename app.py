@@ -691,20 +691,32 @@ def render_list_card(title, values, css_class="list-card"):
 def render_process_image(selected_category=None):
     st.markdown(
         """
-        <div class="navigator-hero">
-            <div class="navigator-kicker">Pharmaceutical Development Ontology Map</div>
-            <h1>Development Evidence Navigator</h1>
-            <p>Find the right quality, CMC, regulatory, and lifecycle evidence from the way a medicine is actually developed and manufactured.</p>
-            <div class="hero-flow">
-                <span>Material</span>
-                <i></i>
-                <span>Product</span>
-                <i></i>
-                <span>Process</span>
-                <i></i>
+        <div class="ontology-visual-stage">
+            <div class="situation-panel">
+                <b>Situation Shortcuts</b>
+                <div class="situation-symbol">!</div>
+                <strong>Solving</strong>
+                <span>Start from the manufacturing problem.</span>
+            </div>
+            <div class="title-ribbon">
+                <h1>PHARMACEUTICAL DEVELOPMENT</h1>
+                <p>ONTOLOGY MAP & EVIDENCE NAVIGATOR</p>
+            </div>
+            <div class="ontology-mini-menu">
+                <b>Ontology Map</b>
+                <span>CMC</span>
+                <span>Regulatory</span>
                 <span>Quality</span>
-                <i></i>
                 <span>Lifecycle</span>
+            </div>
+            <div class="central-ribbon">
+                <strong>DEVELOPMENT EVIDENCE NAVIGATOR</strong>
+                <span>Material to Modern Evidence</span>
+            </div>
+            <div class="golden-thread"></div>
+            <div class="focus-orbit">
+                <strong>Evidence Core</strong>
+                <span>CMC · Quality · Risk · Submission</span>
             </div>
         </div>
         """,
@@ -828,6 +840,174 @@ st.markdown(
     }
     h1, h2, h3 {
         letter-spacing: 0;
+    }
+    .ontology-visual-stage {
+        position: relative;
+        min-height: 21rem;
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        border: 1px solid #b8d1df;
+        background:
+            radial-gradient(circle at 17% 78%, rgba(242, 200, 75, 0.26), transparent 19%),
+            radial-gradient(circle at 62% 62%, rgba(27, 139, 105, 0.16), transparent 22%),
+            linear-gradient(135deg, #e8f4fb 0%, #f8fbfc 48%, #dceef7 100%);
+        box-shadow: 0 24px 54px rgba(8, 32, 51, 0.18);
+    }
+    .ontology-visual-stage:before {
+        content: "";
+        position: absolute;
+        inset: 4.8rem 2rem auto 2rem;
+        height: 0.45rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent 0%, #f2c84b 12%, #f2c84b 86%, transparent 100%);
+        box-shadow: 0 0 18px rgba(242, 200, 75, 0.9);
+    }
+    .title-ribbon {
+        position: absolute;
+        left: 29%;
+        right: 25%;
+        top: 1rem;
+        padding: 0.65rem 1rem 0.75rem 1rem;
+        text-align: center;
+        background: rgba(255,255,255,0.68);
+        border: 2px solid rgba(255,255,255,0.9);
+        border-radius: 0 0 2.2rem 2.2rem;
+        box-shadow: 0 10px 24px rgba(8, 32, 51, 0.08);
+    }
+    .title-ribbon h1 {
+        margin: 0;
+        color: #123d61;
+        font-size: 2rem;
+        line-height: 1.04;
+        font-weight: 950;
+    }
+    .title-ribbon p {
+        margin: 0.2rem 0 0 0;
+        color: #17364a;
+        font-size: 1.3rem;
+        font-weight: 900;
+    }
+    .situation-panel {
+        position: absolute;
+        left: 1rem;
+        top: 1rem;
+        width: 25%;
+        min-height: 9rem;
+        padding: 0.85rem 1rem;
+        border-radius: 0.8rem;
+        color: white;
+        background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
+        box-shadow: 0 16px 34px rgba(8, 32, 51, 0.2);
+    }
+    .situation-panel b {
+        display: block;
+        font-size: 1.15rem;
+        margin-bottom: 0.8rem;
+    }
+    .situation-symbol {
+        float: left;
+        display: grid;
+        place-items: center;
+        width: 3.5rem;
+        height: 3.5rem;
+        margin-right: 0.8rem;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.95);
+        color: #0d5d49;
+        font-size: 2rem;
+        font-weight: 950;
+    }
+    .situation-panel strong {
+        display: block;
+        font-size: 1.35rem;
+    }
+    .situation-panel span {
+        display: block;
+        margin-top: 0.2rem;
+        color: #d8eadf;
+        line-height: 1.25;
+    }
+    .ontology-mini-menu {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        width: 11rem;
+        padding: 0.75rem;
+        border-radius: 0.7rem;
+        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
+        color: white;
+        box-shadow: 0 14px 28px rgba(8, 32, 51, 0.22);
+    }
+    .ontology-mini-menu b {
+        display: block;
+        font-size: 1.05rem;
+        margin-bottom: 0.45rem;
+    }
+    .ontology-mini-menu span {
+        display: block;
+        padding: 0.28rem 0.5rem;
+        margin: 0.2rem 0;
+        border-radius: 0.35rem;
+        background: rgba(255,255,255,0.14);
+        font-weight: 800;
+    }
+    .central-ribbon {
+        position: absolute;
+        left: 29%;
+        right: 29%;
+        top: 8.9rem;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        color: white;
+        background: linear-gradient(135deg, #0d5d74 0%, #123d61 100%);
+        border-radius: 0.35rem;
+        box-shadow: 0 18px 34px rgba(8, 32, 51, 0.2);
+    }
+    .central-ribbon strong {
+        display: block;
+        font-size: 1.25rem;
+        line-height: 1.08;
+    }
+    .central-ribbon span {
+        display: block;
+        color: #d8edf6;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+    .golden-thread {
+        position: absolute;
+        left: 7%;
+        right: 7%;
+        top: 14.2rem;
+        height: 0.42rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 42%, #1b8b69 68%, #236b9a 100%);
+        box-shadow: 0 0 18px rgba(242, 200, 75, 0.8);
+    }
+    .focus-orbit {
+        position: absolute;
+        left: 43%;
+        top: 14.95rem;
+        width: 16rem;
+        min-height: 4.2rem;
+        padding: 0.85rem;
+        text-align: center;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.74);
+        border: 2px solid rgba(242, 200, 75, 0.65);
+        box-shadow: 0 0 24px rgba(242, 200, 75, 0.5);
+    }
+    .focus-orbit strong {
+        display: block;
+        color: #172126;
+        font-size: 1.05rem;
+    }
+    .focus-orbit span {
+        display: block;
+        color: #536064;
+        font-weight: 800;
+        font-size: 0.83rem;
     }
     .navigator-hero {
         position: relative;
