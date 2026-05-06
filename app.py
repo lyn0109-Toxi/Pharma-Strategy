@@ -488,15 +488,15 @@ def guideline_chip(name):
 
 
 PROCESS_FLOW = [
-    ("1. Drug Entity", "API, product, excipient", "Q11 / Q8"),
-    ("2. Pharmaceutical Development", "QTPP, CQA, CMA, CPP", "Q8 / Q9"),
-    ("3. Manufacturing Process", "Unit operations, validation", "Q8 / Q10"),
-    ("4. Quality System", "Specs, methods, impurities", "Q6 / Q2 / Q14"),
-    ("5. Stability", "Shelf life and storage", "Q1"),
-    ("6. Safety and Efficacy", "Nonclinical and clinical", "M3 / S / E"),
-    ("7. Regulatory Documentation", "CTD, DMF, evidence", "M4 / PQ-CMC"),
-    ("8. Risk and Lifecycle", "Risk and change control", "Q9 / Q10 / Q12"),
-    ("9. FDA Modernization", "PQ-CMC, NAMs, AI", "FDA / ICH"),
+    ("1. Drug Entity", "API, product, excipient", "Q11 / Q8", "Material identity"),
+    ("2. Pharmaceutical Development", "QTPP, CQA, CMA, CPP", "Q8 / Q9", "Product design"),
+    ("3. Manufacturing Process", "Unit operations, validation", "Q8 / Q10", "Process control"),
+    ("4. Quality System", "Specs, methods, impurities", "Q6 / Q2 / Q14", "Quality evidence"),
+    ("5. Stability", "Shelf life and storage", "Q1", "Time-based proof"),
+    ("6. Safety and Efficacy", "Nonclinical and clinical", "M3 / S / E", "Benefit and risk"),
+    ("7. Regulatory Documentation", "CTD, DMF, evidence", "M4 / PQ-CMC", "Submission structure"),
+    ("8. Risk and Lifecycle", "Risk and change control", "Q9 / Q10 / Q12", "Lifecycle control"),
+    ("9. FDA Modernization", "PQ-CMC, NAMs, AI", "FDA / ICH", "Modern evidence"),
 ]
 
 
@@ -535,64 +535,161 @@ def render_list_card(title, values, css_class="list-card"):
     )
 
 
+def render_process_image(selected_category):
+    nodes = [
+        ("01", "Drug Entity", "Material identity", 70, 96),
+        ("02", "Development", "Product design", 350, 96),
+        ("03", "Manufacturing", "Process control", 630, 96),
+        ("04", "Quality", "Evidence loop", 910, 96),
+        ("05", "Stability", "Shelf-life proof", 910, 310),
+        ("06", "Safety / Efficacy", "Benefit-risk", 630, 310),
+        ("07", "Regulatory Docs", "CTD / DMF", 350, 310),
+        ("08", "Risk / Lifecycle", "QRM and change", 70, 310),
+        ("09", "Modernization", "PQ-CMC / NAMs / AI", 490, 500),
+    ]
+    selected_number = selected_category.split(".", 1)[0].zfill(2)
+    node_svg = []
+    for number, title, subtitle, x, y in nodes:
+        active = number == selected_number
+        fill = "#172126" if active else "#fffdf8"
+        stroke = "#172126" if active else "#d9d1c1"
+        title_color = "#ffffff" if active else "#1d2528"
+        sub_color = "#c7d9d3" if active else "#687477"
+        badge_fill = "#2e715e" if active else "#e7f2ec"
+        badge_color = "#ffffff" if active else "#1f6f55"
+        node_svg.append(
+            f"""
+            <g>
+                <rect x="{x}" y="{y}" width="210" height="112" rx="14" fill="{fill}" stroke="{stroke}" stroke-width="2"/>
+                <rect x="{x + 18}" y="{y + 18}" width="42" height="28" rx="7" fill="{badge_fill}"/>
+                <text x="{x + 39}" y="{y + 37}" text-anchor="middle" font-size="13" font-weight="700" fill="{badge_color}">{number}</text>
+                <text x="{x + 18}" y="{y + 68}" font-size="20" font-weight="800" fill="{title_color}">{title}</text>
+                <text x="{x + 18}" y="{y + 94}" font-size="14" fill="{sub_color}">{subtitle}</text>
+            </g>
+            """
+        )
+
+    svg = f"""
+    <div class="visual-map">
+        <div class="visual-map-head">
+            <div>
+                <span class="eyebrow">Ontology image map</span>
+                <h2>From material identity to lifecycle evidence</h2>
+            </div>
+            <p>Use the visual map for orientation, then choose a stage below to inspect its evidence and guideline basis.</p>
+        </div>
+        <svg viewBox="0 0 1190 650" role="img" aria-label="Pharmaceutical development ontology process map">
+            <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,6 L8,3 z" fill="#2e715e" />
+                </marker>
+                <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+                    <feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#172126" flood-opacity="0.12"/>
+                </filter>
+            </defs>
+            <rect x="24" y="34" width="1142" height="580" rx="24" fill="#f6f1e7" stroke="#ddd5c4"/>
+            <path d="M280 152 H345" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M560 152 H625" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M840 152 H905" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M1015 208 V304" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M910 366 H845" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M630 366 H565" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M350 366 H285" stroke="#2e715e" stroke-width="5" marker-end="url(#arrow)"/>
+            <path d="M175 422 C210 500, 325 544, 480 552" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+            <path d="M700 552 C855 544, 990 486, 1015 422" stroke="#2e715e" stroke-width="5" fill="none" marker-end="url(#arrow)"/>
+            <g filter="url(#softShadow)">
+                {''.join(node_svg)}
+            </g>
+        </svg>
+    </div>
+    """
+    st.markdown(svg, unsafe_allow_html=True)
+
+
 st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 2rem;
+        padding-top: 1.5rem;
         padding-bottom: 3rem;
-        max-width: 1280px;
+        max-width: 1320px;
     }
     h1, h2, h3 {
         letter-spacing: 0;
     }
     .hero {
-        border-left: 8px solid #2e715e;
-        padding: 1rem 0 1.1rem 1.35rem;
-        margin-bottom: 1.2rem;
+        background: radial-gradient(circle at 15% 15%, #d9eadf 0, transparent 24%),
+                    linear-gradient(135deg, #172126 0%, #20363a 58%, #2e715e 100%);
+        color: white;
+        padding: 2rem 2.2rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid #22383a;
+        border-radius: 0.7rem;
     }
     .hero h1 {
-        font-size: 2.75rem;
+        font-size: 3rem;
         line-height: 1.08;
         margin-bottom: 0.55rem;
+        color: white;
     }
     .hero p {
-        color: #5c6668;
-        font-size: 1.12rem;
-        max-width: 920px;
+        color: #d6e4df;
+        font-size: 1.15rem;
+        max-width: 960px;
     }
-    .map-wrap {
+    .visual-map {
         border: 1px solid #d9d1c1;
-        background: linear-gradient(180deg, #fffdf8 0%, #f9f5ec 100%);
-        padding: 1rem 1rem 0.8rem 1rem;
-        margin: 0.6rem 0 1.4rem 0;
+        background: #fffdf8;
+        border-radius: 0.7rem;
+        overflow: hidden;
+        margin: 0.6rem 0 1rem 0;
+        box-shadow: 0 18px 45px rgba(23, 33, 38, 0.08);
     }
-    .map-title {
+    .visual-map-head {
         display: flex;
         justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 0.7rem;
-        align-items: baseline;
+        align-items: flex-start;
+        gap: 2rem;
+        padding: 1.2rem 1.35rem 0.2rem 1.35rem;
     }
-    .map-title h2 {
+    .visual-map-head h2 {
         margin: 0;
-        font-size: 1.25rem;
+        font-size: 1.45rem;
     }
-    .map-title span {
+    .visual-map-head p {
         color: #687477;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        max-width: 430px;
+        margin: 0.25rem 0 0 0;
+    }
+    .eyebrow {
+        display: inline-block;
+        color: #1f6f55;
+        background: #e7f2ec;
+        padding: 0.22rem 0.5rem;
+        border-radius: 0.3rem;
+        font-size: 0.78rem;
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+        text-transform: uppercase;
+    }
+    .visual-map svg {
+        width: 100%;
+        height: auto;
+        display: block;
     }
     div.stButton > button {
         width: 100%;
-        min-height: 5.9rem;
-        border-radius: 0.35rem;
+        min-height: 4.6rem;
+        border-radius: 0.55rem;
         border: 1px solid #d9d1c1;
         background: #fffdf8;
         color: #1d2528;
         text-align: left;
-        padding: 0.75rem 0.85rem;
+        padding: 0.7rem 0.75rem;
         line-height: 1.18;
         font-weight: 700;
+        box-shadow: 0 8px 18px rgba(23, 33, 38, 0.05);
     }
     div.stButton > button:hover {
         border-color: #2e715e;
@@ -601,7 +698,7 @@ st.markdown(
     }
     .stage-caption {
         color: #687477;
-        font-size: 0.84rem;
+        font-size: 0.8rem;
         margin-top: -0.5rem;
         min-height: 2.4rem;
     }
@@ -616,10 +713,11 @@ st.markdown(
         margin-top: 0.15rem;
     }
     .selected-strip {
-        background: #172126;
+        background: linear-gradient(135deg, #172126 0%, #23373b 100%);
         color: white;
-        padding: 0.9rem 1rem;
-        margin: 0.5rem 0 1.2rem 0;
+        padding: 1rem 1.15rem;
+        margin: 0.9rem 0 1.1rem 0;
+        border-radius: 0.55rem;
     }
     .selected-strip b {
         color: #d8eadf;
@@ -635,10 +733,11 @@ st.markdown(
         font-size: 1.25rem;
     }
     .rationale {
-        background: #172126;
+        background: linear-gradient(135deg, #172126 0%, #21383a 100%);
         color: white;
-        padding: 1.1rem 1.25rem;
+        padding: 1rem 1.2rem;
         margin: 0.8rem 0 1rem 0;
+        border-radius: 0.55rem;
     }
     .rationale h3 {
         color: white;
@@ -675,7 +774,9 @@ st.markdown(
         background: #fffdf8;
         padding: 1rem 1.05rem;
         margin-bottom: 1rem;
-        min-height: 12rem;
+        min-height: 9rem;
+        border-radius: 0.55rem;
+        box-shadow: 0 10px 22px rgba(23, 33, 38, 0.05);
     }
     .info-card h3, .list-card h3 {
         margin: 0 0 0.55rem 0;
@@ -708,6 +809,7 @@ st.markdown(
         background: #fffdf8;
         padding: 0.9rem 1rem;
         margin-bottom: 0.75rem;
+        border-radius: 0.55rem;
     }
     .guideline-card h4 {
         margin: 0 0 0.35rem 0;
@@ -717,6 +819,22 @@ st.markdown(
         color: #536064;
         margin: 0.2rem 0;
         line-height: 1.35;
+    }
+    .evidence-panel {
+        border: 1px solid #d9d1c1;
+        background: #fffdf8;
+        padding: 1rem;
+        border-radius: 0.55rem;
+        margin-bottom: 1rem;
+    }
+    .relationship-box {
+        border: 1px solid #d9d1c1;
+        background: #f8f4ea;
+        padding: 1rem;
+        border-radius: 0.55rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        color: #253134;
+        overflow-wrap: anywhere;
     }
     </style>
     """,
@@ -729,9 +847,9 @@ st.markdown(
     <div class="hero">
         <h1>Pharmaceutical Development Ontology</h1>
         <p>
-        Explore the drug development process as an ontology. Select a process
-        category and item to review detailed information, CTD/DMF evidence
-        locations, and guideline rationale.
+        A visual navigation layer for drug development knowledge: material identity,
+        product design, manufacturing, quality evidence, stability, regulatory
+        documentation, lifecycle risk, and FDA modernization.
         </p>
     </div>
     """,
@@ -743,21 +861,12 @@ if "category" not in st.session_state:
     st.session_state.category = list(ONTOLOGY.keys())[0]
 
 
-st.markdown(
-    """
-    <div class="map-wrap">
-        <div class="map-title">
-            <h2>Ontology Process Map</h2>
-            <span>Click a stage to open its process details and guideline rationale.</span>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+render_process_image(st.session_state.category)
 
+st.caption("Stage selector")
 first_row = st.columns(5)
 second_row = st.columns(4)
-for index, (stage, caption, guide) in enumerate(PROCESS_FLOW):
+for index, (stage, caption, guide, theme) in enumerate(PROCESS_FLOW):
     row = first_row if index < 5 else second_row
     with row[index if index < 5 else index - 5]:
         if st.button(stage, key=f"stage_{stage}"):
@@ -765,7 +874,7 @@ for index, (stage, caption, guide) in enumerate(PROCESS_FLOW):
         st.markdown(
             f"""
             <div class="stage-caption">
-                {caption}<br><span class="stage-guide">{guide}</span>
+                {theme}<br><span class="stage-guide">{guide}</span>
             </div>
             """,
             unsafe_allow_html=True,
@@ -814,24 +923,28 @@ st.markdown(
 )
 
 
-detail_col, data_col, evidence_col = st.columns([1.15, 0.9, 1])
+summary_col, evidence_col = st.columns([1.2, 1])
 
-with detail_col:
-    render_list_card("Detailed Information", item_data["details"])
-
-with data_col:
-    render_list_card("Key Data Elements", item_data["data"])
-    
+with summary_col:
+    render_list_card("Key Data Elements", item_data["data"][:4])
+    with st.expander("See detailed information"):
+        for detail in item_data["details"]:
+            st.markdown(f"- {detail}")
+        if len(item_data["data"]) > 4:
+            st.markdown("**Additional data elements**")
+            for datum in item_data["data"][4:]:
+                st.markdown(f"- {datum}")
+ 
 with evidence_col:
-    st.markdown("### CTD / Evidence Location")
     st.markdown(
-        " ".join([f"<span class='ctd'>{location}</span>" for location in item_data["ctd"]]),
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("### Related Guidelines")
-    st.markdown(
-        " ".join([guideline_chip(guideline) for guideline in item_data["guidelines"]]),
+        f"""
+        <div class="evidence-panel">
+            <h3>CTD / Evidence Location</h3>
+            {" ".join([f"<span class='ctd'>{location}</span>" for location in item_data["ctd"]])}
+            <h3 style="margin-top:1rem;">Related Guidelines</h3>
+            {" ".join([guideline_chip(guideline) for guideline in item_data["guidelines"]])}
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -854,7 +967,7 @@ for index, guideline_name in enumerate(item_data["guidelines"]):
         )
 
 
-st.markdown("### Ontology Relationship Examples")
+st.markdown("### Ontology Relationship")
 relationship_examples = {
     "Drug Substance / API": "DrugSubstance --hasImpurity--> Impurity --controlledBy--> Specification --testedBy--> AnalyticalMethod",
     "Drug Product": "DrugProduct --hasCQA--> CQA --controlledBy--> Specification --monitoredBy--> StabilityStudy",
@@ -880,8 +993,15 @@ relationship_examples = {
     "NAMs Evidence": "NAMsModel --hasContextOfUse--> RegulatoryQuestion --integratedBy--> WeightOfEvidence",
     "AI Credibility": "AIModel --hasContextOfUse--> Decision --hasCredibilityEvidence--> ValidationPackage",
 }
-st.code(relationship_examples.get(item, "OntologyItem --alignedWith--> Guideline --supportedBy--> Evidence"), language="text")
+st.markdown(
+    f"""
+    <div class="relationship-box">
+        {relationship_examples.get(item, "OntologyItem --alignedWith--> Guideline --supportedBy--> Evidence")}
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 
-st.markdown("### Full Ontology Index")
-st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
+with st.expander("Full ontology index"):
+    st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
