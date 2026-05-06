@@ -689,9 +689,26 @@ def render_list_card(title, values, css_class="list-card"):
 
 
 def render_process_image(selected_category=None):
-    st.title("Pharmaceutical Development Navigator")
-    st.caption(
-        "Start from a manufacturing situation or open an ontology domain directly."
+    st.markdown(
+        """
+        <div class="navigator-hero">
+            <div class="navigator-kicker">Pharmaceutical Development Ontology Map</div>
+            <h1>Development Evidence Navigator</h1>
+            <p>Find the right quality, CMC, regulatory, and lifecycle evidence from the way a medicine is actually developed and manufactured.</p>
+            <div class="hero-flow">
+                <span>Material</span>
+                <i></i>
+                <span>Product</span>
+                <i></i>
+                <span>Process</span>
+                <i></i>
+                <span>Quality</span>
+                <i></i>
+                <span>Lifecycle</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
@@ -715,17 +732,42 @@ def open_playbook(playbook_key):
 
 
 def render_landing_navigation():
-    st.markdown("#### Situation Shortcuts")
+    st.markdown(
+        """
+        <div class="map-section">
+            <span>Situation Shortcuts</span>
+            <b>Start from the manufacturing problem you are facing now.</b>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     playbook_cols = st.columns(4)
     for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
         with playbook_cols[index % 4]:
-            if st.button(
-                f"{playbook['label']}\n\n{playbook['category'].split('.', 1)[1].strip()}",
-                key=f"playbook_{playbook_key}",
-            ):
+            st.markdown(
+                f"""
+                <div class="mini-map-card">
+                    <b>{playbook["label"]}</b>
+                    <span>{playbook["category"].split(".", 1)[1].strip()}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Open", key=f"playbook_{playbook_key}"):
                 open_playbook(playbook_key)
 
-    st.markdown("#### Ontology Map")
+    st.markdown(
+        """
+        <div class="map-section ontology">
+            <span>Ontology Map</span>
+            <b>Or open a knowledge domain directly. Each node is a clickable evidence object.</b>
+        </div>
+        <div class="flow-spine">
+            <span>Material</span><i></i><span>Product Design</span><i></i><span>Manufacturing</span><i></i><span>Quality Evidence</span><i></i><span>Lifecycle</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     map_nodes = [
         ("1. Drug Entity", "01", "Drug Entity", "API | Product | Excipient", "Q11 Q7 Q8"),
         ("2. Pharmaceutical Development", "02", "Development", "QTPP | CQA | CMA/CPP", "Q8 Q9"),
@@ -742,16 +784,49 @@ def render_landing_navigation():
     for index, node in enumerate(map_nodes[:4]):
         category, number, title, objects, guides = node
         with top_row[index]:
-            if st.button(f"{number}  {title}\n\n{objects}\n{guides}", key=f"map_node_{category}"):
+            st.markdown(
+                f"""
+                <div class="ontology-node-card">
+                    <div class="node-number">{number}</div>
+                    <h3>{title}</h3>
+                    <p>{objects}</p>
+                    <span>Guideline: {guides}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Open Detail", key=f"map_node_{category}"):
                 open_category(category)
 
-    st.markdown("##### Development Evidence Flow")
+    st.markdown(
+        """
+        <div class="map-midline">
+            <span>Time-based proof</span>
+            <span>Benefit-risk</span>
+            <span>Submission</span>
+            <span>Change control</span>
+            <span>Modern evidence</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     bottom_row = st.columns(5)
     for index, node in enumerate(map_nodes[4:]):
         category, number, title, objects, guides = node
         with bottom_row[index]:
-            if st.button(f"{number}  {title}\n\n{objects}\n{guides}", key=f"map_node_{category}"):
+            st.markdown(
+                f"""
+                <div class="ontology-node-card compact">
+                    <div class="node-number">{number}</div>
+                    <h3>{title}</h3>
+                    <p>{objects}</p>
+                    <span>Guideline: {guides}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Open Detail", key=f"map_node_{category}"):
                 open_category(category)
 
 
@@ -765,6 +840,197 @@ st.markdown(
     }
     h1, h2, h3 {
         letter-spacing: 0;
+    }
+    .navigator-hero {
+        position: relative;
+        overflow: hidden;
+        background:
+            linear-gradient(135deg, rgba(18, 61, 97, 0.96) 0%, rgba(23, 33, 38, 0.97) 48%, rgba(27, 139, 105, 0.94) 100%);
+        color: white;
+        padding: 2rem 2.2rem 1.4rem 2.2rem;
+        border-radius: 0.8rem;
+        border: 1px solid #1f4f5b;
+        box-shadow: 0 22px 48px rgba(8, 32, 51, 0.16);
+        margin-bottom: 1rem;
+    }
+    .navigator-hero:before {
+        content: "";
+        position: absolute;
+        right: -8rem;
+        top: -9rem;
+        width: 24rem;
+        height: 24rem;
+        border-radius: 50%;
+        background: rgba(242, 200, 75, 0.13);
+    }
+    .navigator-kicker {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #d8edf6;
+        padding: 0.3rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .navigator-hero h1 {
+        position: relative;
+        margin: 0.75rem 0 0.45rem 0;
+        color: white;
+        font-size: 3rem;
+        line-height: 1.05;
+    }
+    .navigator-hero p {
+        position: relative;
+        max-width: 860px;
+        color: #d6e4df;
+        font-size: 1.05rem;
+        margin: 0 0 1.1rem 0;
+    }
+    .hero-flow, .flow-spine, .map-midline {
+        display: grid;
+        align-items: center;
+        gap: 0.55rem;
+    }
+    .hero-flow {
+        grid-template-columns: auto 1fr auto 1fr auto 1fr auto 1fr auto;
+        position: relative;
+        max-width: 960px;
+    }
+    .hero-flow span, .flow-spine span, .map-midline span {
+        display: inline-grid;
+        place-items: center;
+        min-height: 2rem;
+        border-radius: 999px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .hero-flow span {
+        background: rgba(255, 255, 255, 0.14);
+        color: white;
+        padding: 0.35rem 0.7rem;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .hero-flow i, .flow-spine i {
+        height: 0.35rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
+    }
+    .map-section {
+        margin: 1rem 0 0.65rem 0;
+        padding: 0.8rem 1rem;
+        border-radius: 0.65rem;
+        background: #f8fbfc;
+        border: 1px solid #cddce3;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+    }
+    .map-section span {
+        color: #17364a;
+        font-size: 1.1rem;
+        font-weight: 950;
+    }
+    .map-section b {
+        color: #536064;
+        font-size: 0.9rem;
+    }
+    .map-section.ontology {
+        background: linear-gradient(135deg, #fffdf8 0%, #eef6f1 100%);
+        border-color: #d9d1c1;
+    }
+    .flow-spine {
+        grid-template-columns: auto 1fr auto 1fr auto 1fr auto 1fr auto;
+        margin: 0.7rem 0 0.9rem 0;
+        padding: 0.7rem 0.9rem;
+        border-radius: 999px;
+        background: #172126;
+    }
+    .flow-spine span {
+        background: #ffffff;
+        color: #17364a;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.82rem;
+    }
+    .map-midline {
+        grid-template-columns: repeat(5, 1fr);
+        margin: 0.7rem 0;
+    }
+    .map-midline span {
+        background: #e8f1f8;
+        color: #236b9a;
+        padding: 0.35rem 0.4rem;
+        font-size: 0.78rem;
+    }
+    .mini-map-card, .ontology-node-card {
+        border: 1px solid #cddce3;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
+        border-radius: 0.7rem;
+        padding: 0.9rem 0.95rem;
+        min-height: 6.2rem;
+        box-shadow: 0 12px 24px rgba(23, 33, 38, 0.07);
+        margin-bottom: 0.35rem;
+    }
+    .mini-map-card b {
+        display: block;
+        color: #172126;
+        font-size: 1rem;
+        line-height: 1.15;
+    }
+    .mini-map-card span {
+        display: inline-block;
+        margin-top: 0.55rem;
+        color: #1f6f55;
+        font-size: 0.82rem;
+        font-weight: 900;
+    }
+    .ontology-node-card {
+        min-height: 9.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .ontology-node-card:before {
+        content: "";
+        position: absolute;
+        right: -2.8rem;
+        top: -2.8rem;
+        width: 7rem;
+        height: 7rem;
+        border-radius: 50%;
+        background: rgba(46, 113, 94, 0.11);
+    }
+    .ontology-node-card .node-number {
+        display: inline-grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 50%;
+        background: #172126;
+        color: white;
+        font-weight: 950;
+        margin-bottom: 0.55rem;
+    }
+    .ontology-node-card h3 {
+        margin: 0;
+        font-size: 1.02rem;
+        color: #172126;
+    }
+    .ontology-node-card p {
+        margin: 0.5rem 0 0.45rem 0;
+        color: #536064;
+        font-size: 0.86rem;
+        line-height: 1.25;
+    }
+    .ontology-node-card span {
+        display: inline-block;
+        color: #236b9a;
+        background: #e8f1f8;
+        border-radius: 999px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 900;
     }
     .hero {
         background: radial-gradient(circle at 15% 15%, #d9eadf 0, transparent 24%),
@@ -829,17 +1095,16 @@ st.markdown(
     }
     div.stButton > button {
         width: 100%;
-        min-height: 6.8rem;
-        border-radius: 0.55rem;
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
+        min-height: 2.7rem;
+        border-radius: 0.7rem;
+        border: 1px solid #cddce3;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
         color: #1d2528;
-        text-align: left;
-        padding: 0.8rem 0.85rem;
+        text-align: center;
+        padding: 0.45rem 0.75rem;
         line-height: 1.22;
-        font-weight: 800;
-        white-space: pre-wrap;
-        box-shadow: 0 8px 18px rgba(23, 33, 38, 0.05);
+        font-weight: 900;
+        box-shadow: 0 12px 24px rgba(23, 33, 38, 0.07);
     }
     div.stButton > button:hover {
         border-color: #2e715e;
