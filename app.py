@@ -558,6 +558,106 @@ CASE_STUDY = {
 }
 
 
+SITUATION_PLAYBOOKS = {
+    "api_supplier_change": {
+        "label": "API Supplier Change",
+        "lead": "Use when an API supplier, DMF, route, particle size, polymorph, or CoA profile changes.",
+        "category": "1. Drug Entity",
+        "item": "Drug Substance / API",
+        "checklist": [
+            "Confirm supplier qualification, DMF/LOA status, and GMP evidence",
+            "Compare API particle size, polymorph, water content, assay, and impurity profile",
+            "Assess whether material attributes can affect dissolution, assay, content uniformity, or stability",
+            "Manufacture representative batch and compare product performance",
+            "Document change control, QRM conclusion, and regulatory reporting category",
+        ],
+        "evidence": [
+            "Supplier qualification record",
+            "DMF or supplier technical package",
+            "API CoA and batch analysis",
+            "Particle size / polymorph data",
+            "Comparative dissolution",
+            "Change control and QRM report",
+        ],
+        "ctd": ["3.2.S.2", "3.2.S.3", "3.2.S.4", "3.2.P.2", "3.2.P.5"],
+        "guidelines": ["ICH Q11", "ICH Q9", "ICH Q10", "ICH Q12", "ICH M4"],
+        "decision": "If the supplier change can affect a CQA, treat it as a lifecycle regulatory change and prepare comparative CMC evidence.",
+    },
+    "dissolution_failure": {
+        "label": "Dissolution Failure",
+        "lead": "Use when product dissolution is out of trend, non-equivalent, or inconsistent with the reference product.",
+        "category": "4. Quality System",
+        "item": "Analytical Method",
+        "checklist": [
+            "Confirm method suitability, medium, apparatus, rpm, sampling time, and analyst/equipment factors",
+            "Compare API particle size, formulation composition, process parameters, and batch history",
+            "Check whether dissolution is a CQA linked to QTPP and clinical/BE performance",
+            "Run comparative dissolution and trend against historical approved batches",
+            "Open deviation/CAPA and assess regulatory impact if approved quality may be affected",
+        ],
+        "evidence": [
+            "Dissolution profile",
+            "Analytical method and validation",
+            "Batch record",
+            "API material attributes",
+            "OOS/OOT investigation",
+            "CAPA and change impact assessment",
+        ],
+        "ctd": ["3.2.P.2", "3.2.P.3", "3.2.P.5", "3.2.P.8"],
+        "guidelines": ["ICH Q8", "ICH Q9", "ICH Q6", "ICH Q2(R2)", "ICH Q14"],
+        "decision": "If dissolution failure is linked to material or process change, connect Quality System evidence to Risk/Lifecycle and Regulatory Documentation.",
+    },
+    "cqa_spec_method": {
+        "label": "CQA / Spec / Method",
+        "lead": "Use when setting CQAs, specifications, acceptance criteria, analytical methods, or validation packages.",
+        "category": "2. Pharmaceutical Development",
+        "item": "CQA",
+        "checklist": [
+            "Define QTPP and identify patient-relevant CQAs",
+            "Link each CQA to CMA, CPP, specification, analytical method, and stability monitoring",
+            "Justify acceptance criteria using development, batch, safety, and stability data",
+            "Confirm method purpose through ATP or intended use",
+            "Validate methods and document lifecycle method knowledge",
+        ],
+        "evidence": [
+            "QTPP/CQA assessment",
+            "Risk ranking",
+            "Specification justification",
+            "Analytical procedure",
+            "Method validation report",
+            "Stability-indicating evidence",
+        ],
+        "ctd": ["3.2.P.2", "3.2.P.5", "3.2.P.8", "Module 2.3"],
+        "guidelines": ["ICH Q8", "ICH Q9", "ICH Q6", "ICH Q2(R2)", "ICH Q14"],
+        "decision": "A quality attribute becomes operationally useful only when it is connected to a test, criterion, control point, and lifecycle monitoring plan.",
+    },
+    "post_approval_change": {
+        "label": "Post-Approval Change",
+        "lead": "Use when formulation, process, site, supplier, specification, method, or packaging changes after approval.",
+        "category": "8. Risk and Lifecycle",
+        "item": "Lifecycle Change Management",
+        "checklist": [
+            "Describe the proposed change and affected product knowledge elements",
+            "Map impact to CQA, CMA, CPP, analytical method, specification, and stability",
+            "Define comparative evidence needed before implementation",
+            "Decide reporting category and prepare variation dossier if required",
+            "Update control strategy, PQS records, and post-change monitoring",
+        ],
+        "evidence": [
+            "Change control",
+            "QRM assessment",
+            "Comparability protocol",
+            "Batch and analytical comparison",
+            "Stability commitment",
+            "Variation dossier / CTD update",
+        ],
+        "ctd": ["3.2.S", "3.2.P.2", "3.2.P.3", "3.2.P.5", "3.2.P.8"],
+        "guidelines": ["ICH Q9", "ICH Q10", "ICH Q12", "ICH M4"],
+        "decision": "If established conditions or approved quality commitments are affected, prepare a structured regulatory change package.",
+    },
+}
+
+
 def render_card(title, body, footer=None, accent="green"):
     accent_map = {
         "green": "#2e715e",
@@ -602,11 +702,30 @@ def open_category(category):
     st.query_params["category"] = category
     if "item" in st.query_params:
         del st.query_params["item"]
+    if "playbook" in st.query_params:
+        del st.query_params["playbook"]
     st.session_state.category = category
     st.rerun()
 
 
+def open_playbook(playbook_key):
+    playbook = SITUATION_PLAYBOOKS[playbook_key]
+    st.query_params["category"] = playbook["category"]
+    st.query_params["item"] = playbook["item"]
+    st.query_params["playbook"] = playbook_key
+    st.session_state.category = playbook["category"]
+    st.rerun()
+
+
 def render_landing_navigation():
+    st.markdown("### Start by Situation")
+    playbook_cols = st.columns(4)
+    for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
+        with playbook_cols[index % 4]:
+            if st.button(playbook["label"], key=f"playbook_{playbook_key}"):
+                open_playbook(playbook_key)
+
+    st.markdown("### Ontology Map")
     labels = {
         "1. Drug Entity": "1 Drug Entity",
         "2. Pharmaceutical Development": "2 Development",
@@ -917,6 +1036,32 @@ st.markdown(
         font-size: 0.8rem;
         font-weight: 800;
     }
+    .playbook-panel {
+        border: 1px solid #b8d1df;
+        background: linear-gradient(135deg, #edf6fb 0%, #f7fbfc 46%, #eef6f1 100%);
+        padding: 1rem 1.1rem;
+        margin: 0.8rem 0 1rem 0;
+        border-radius: 0.65rem;
+    }
+    .playbook-panel h3 {
+        margin: 0 0 0.3rem 0;
+        font-size: 1.2rem;
+    }
+    .playbook-panel p {
+        color: #536064;
+        margin: 0.25rem 0 0.7rem 0;
+        line-height: 1.42;
+    }
+    .playbook-chip {
+        display: inline-block;
+        background: #e8f1f8;
+        color: #236b9a;
+        padding: 0.28rem 0.55rem;
+        margin: 0.15rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border-radius: 999px;
+    }
     .landing-note {
         color: #536064;
         font-size: 0.95rem;
@@ -931,6 +1076,7 @@ st.markdown(
 
 query_category = st.query_params.get("category")
 query_item = st.query_params.get("item")
+query_playbook = st.query_params.get("playbook")
 if query_category in ONTOLOGY:
     st.session_state.category = query_category
 else:
@@ -946,6 +1092,11 @@ if st.button("Back to Ontology Map"):
 
 with st.sidebar:
     st.header("Ontology Menu")
+    st.subheader("Situation Finder")
+    for playbook_key, playbook in SITUATION_PLAYBOOKS.items():
+        if st.button(playbook["label"], key=f"side_playbook_{playbook_key}"):
+            open_playbook(playbook_key)
+    st.divider()
     category = st.radio(
         "Development process",
         list(ONTOLOGY.keys()),
@@ -964,6 +1115,7 @@ with st.sidebar:
 
 category_data = ONTOLOGY[category]
 item_data = category_data["items"][item]
+active_playbook = SITUATION_PLAYBOOKS.get(query_playbook)
 
 st.markdown(
     """
@@ -1000,6 +1152,25 @@ if search_term:
                     st.rerun()
     else:
         st.info("No ontology item matched that search term.")
+
+if active_playbook:
+    st.markdown(
+        f"""
+        <div class="playbook-panel">
+            <h3>{active_playbook["label"]}</h3>
+            <p>{active_playbook["lead"]}</p>
+            <p><b>Decision:</b> {active_playbook["decision"]}</p>
+            {" ".join([f"<span class='playbook-chip'>{guide}</span>" for guide in active_playbook["guidelines"]])}
+            {" ".join([f"<span class='playbook-chip'>{section}</span>" for section in active_playbook["ctd"]])}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    playbook_check_col, playbook_evidence_col = st.columns(2)
+    with playbook_check_col:
+        render_list_card("Manufacturing Checklist", active_playbook["checklist"])
+    with playbook_evidence_col:
+        render_list_card("Evidence Basket", active_playbook["evidence"])
 
 st.markdown(
     f"""
