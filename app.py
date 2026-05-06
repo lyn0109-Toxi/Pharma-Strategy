@@ -742,27 +742,17 @@ def render_landing_navigation():
         unsafe_allow_html=True,
     )
     playbook_cols = st.columns(4)
-    playbook_themes = {
-        "api_supplier_change": ("material", "M"),
-        "dissolution_failure": ("quality", "Q"),
-        "cqa_spec_method": ("development", "D"),
-        "post_approval_change": ("lifecycle", "L"),
+    playbook_marks = {
+        "api_supplier_change": "M",
+        "dissolution_failure": "Q",
+        "cqa_spec_method": "D",
+        "post_approval_change": "L",
     }
     for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
         with playbook_cols[index % 4]:
-            theme, mark = playbook_themes[playbook_key]
-            st.markdown(
-                f"""
-                <div class="visual-node {theme}">
-                    <div class="visual-mark">{mark}</div>
-                    <div class="visual-lines"><i></i><i></i><i></i></div>
-                    <span>{playbook["category"].split(".", 1)[1].strip()}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            mark = playbook_marks[playbook_key]
             if st.button(
-                f"{playbook['label']}\n\n{playbook['category'].split('.', 1)[1].strip()}",
+                f"{mark}  {playbook['label']}\n\n{playbook['category'].split('.', 1)[1].strip()}",
                 key=f"playbook_{playbook_key}",
                 help=f"{playbook['lead']} Linked domain: {playbook['category']}",
             ):
@@ -796,18 +786,8 @@ def render_landing_navigation():
     for index, node in enumerate(map_nodes[:4]):
         category, number, title, objects, guides, theme, mark = node
         with top_row[index]:
-            st.markdown(
-                f"""
-                <div class="visual-node {theme}">
-                    <div class="visual-mark">{mark}</div>
-                    <div class="visual-lines"><i></i><i></i><i></i></div>
-                    <span>{guides}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
             if st.button(
-                f"{number}  {title}\n\n{objects}\nGuideline: {guides}",
+                f"{mark}  {number}  {title}\n\n{objects}\nGuideline: {guides}",
                 key=f"map_node_{category}",
                 help=f"{objects} | Guideline: {guides}",
             ):
@@ -830,18 +810,8 @@ def render_landing_navigation():
     for index, node in enumerate(map_nodes[4:]):
         category, number, title, objects, guides, theme, mark = node
         with bottom_row[index]:
-            st.markdown(
-                f"""
-                <div class="visual-node {theme}">
-                    <div class="visual-mark">{mark}</div>
-                    <div class="visual-lines"><i></i><i></i><i></i></div>
-                    <span>{guides}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
             if st.button(
-                f"{number}  {title}\n\n{objects}\nGuideline: {guides}",
+                f"{mark}  {number}  {title}\n\n{objects}\nGuideline: {guides}",
                 key=f"map_node_{category}",
                 help=f"{objects} | Guideline: {guides}",
             ):
@@ -1194,13 +1164,13 @@ st.markdown(
     }
     div.stButton > button {
         width: 100%;
-        min-height: 7.4rem;
+        min-height: 8.4rem;
         border-radius: 0.7rem;
         border: 1px solid #cddce3;
         background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
         color: #1d2528;
         text-align: left;
-        padding: 0.85rem 0.9rem;
+        padding: 1rem 0.95rem;
         line-height: 1.22;
         font-weight: 900;
         white-space: pre-wrap;
@@ -1209,7 +1179,8 @@ st.markdown(
     div.stButton > button:hover {
         border-color: #2e715e;
         color: #1f6f55;
-        background: #eef6f1;
+        background: linear-gradient(135deg, #eef6f1 0%, #ffffff 100%);
+        transform: translateY(-2px);
     }
     .stage-caption {
         color: #687477;
