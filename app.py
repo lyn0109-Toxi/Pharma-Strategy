@@ -744,16 +744,11 @@ def render_landing_navigation():
     playbook_cols = st.columns(4)
     for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
         with playbook_cols[index % 4]:
-            st.markdown(
-                f"""
-                <div class="mini-map-card">
-                    <b>{playbook["label"]}</b>
-                    <span>{playbook["category"].split(".", 1)[1].strip()}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            if st.button("Open", key=f"playbook_{playbook_key}"):
+            if st.button(
+                playbook["label"],
+                key=f"playbook_{playbook_key}",
+                help=f"{playbook['lead']} Linked domain: {playbook['category']}",
+            ):
                 open_playbook(playbook_key)
 
     st.markdown(
@@ -784,18 +779,11 @@ def render_landing_navigation():
     for index, node in enumerate(map_nodes[:4]):
         category, number, title, objects, guides = node
         with top_row[index]:
-            st.markdown(
-                f"""
-                <div class="ontology-node-card">
-                    <div class="node-number">{number}</div>
-                    <h3>{title}</h3>
-                    <p>{objects}</p>
-                    <span>Guideline: {guides}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            if st.button("Open Detail", key=f"map_node_{category}"):
+            if st.button(
+                f"{number} {title}",
+                key=f"map_node_{category}",
+                help=f"{objects} | Guideline: {guides}",
+            ):
                 open_category(category)
 
     st.markdown(
@@ -815,18 +803,11 @@ def render_landing_navigation():
     for index, node in enumerate(map_nodes[4:]):
         category, number, title, objects, guides = node
         with bottom_row[index]:
-            st.markdown(
-                f"""
-                <div class="ontology-node-card compact">
-                    <div class="node-number">{number}</div>
-                    <h3>{title}</h3>
-                    <p>{objects}</p>
-                    <span>Guideline: {guides}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            if st.button("Open Detail", key=f"map_node_{category}"):
+            if st.button(
+                f"{number} {title}",
+                key=f"map_node_{category}",
+                help=f"{objects} | Guideline: {guides}",
+            ):
                 open_category(category)
 
 
