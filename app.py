@@ -487,6 +487,54 @@ def guideline_chip(name):
     return f"<span class='chip'>{name}</span>"
 
 
+PROCESS_FLOW = [
+    ("1. Drug Entity", "API, product, excipient", "Q11 / Q8"),
+    ("2. Pharmaceutical Development", "QTPP, CQA, CMA, CPP", "Q8 / Q9"),
+    ("3. Manufacturing Process", "Unit operations, validation", "Q8 / Q10"),
+    ("4. Quality System", "Specs, methods, impurities", "Q6 / Q2 / Q14"),
+    ("5. Stability", "Shelf life and storage", "Q1"),
+    ("6. Safety and Efficacy", "Nonclinical and clinical", "M3 / S / E"),
+    ("7. Regulatory Documentation", "CTD, DMF, evidence", "M4 / PQ-CMC"),
+    ("8. Risk and Lifecycle", "Risk and change control", "Q9 / Q10 / Q12"),
+    ("9. FDA Modernization", "PQ-CMC, NAMs, AI", "FDA / ICH"),
+]
+
+
+def render_card(title, body, footer=None, accent="green"):
+    accent_map = {
+        "green": "#2e715e",
+        "blue": "#236b9a",
+        "gold": "#9a6a1f",
+        "red": "#ad4f3f",
+        "dark": "#172126",
+    }
+    color = accent_map.get(accent, accent_map["green"])
+    footer_html = f"<div class='card-footer'>{footer}</div>" if footer else ""
+    st.markdown(
+        f"""
+        <div class="info-card" style="border-top:4px solid {color};">
+            <h3>{title}</h3>
+            <p>{body}</p>
+            {footer_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_list_card(title, values, css_class="list-card"):
+    items = "".join([f"<li>{value}</li>" for value in values])
+    st.markdown(
+        f"""
+        <div class="{css_class}">
+            <h3>{title}</h3>
+            <ul>{items}</ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 st.markdown(
     """
     <style>
@@ -512,6 +560,69 @@ st.markdown(
         color: #5c6668;
         font-size: 1.12rem;
         max-width: 920px;
+    }
+    .map-wrap {
+        border: 1px solid #d9d1c1;
+        background: linear-gradient(180deg, #fffdf8 0%, #f9f5ec 100%);
+        padding: 1rem 1rem 0.8rem 1rem;
+        margin: 0.6rem 0 1.4rem 0;
+    }
+    .map-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.7rem;
+        align-items: baseline;
+    }
+    .map-title h2 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    .map-title span {
+        color: #687477;
+        font-size: 0.9rem;
+    }
+    div.stButton > button {
+        width: 100%;
+        min-height: 5.9rem;
+        border-radius: 0.35rem;
+        border: 1px solid #d9d1c1;
+        background: #fffdf8;
+        color: #1d2528;
+        text-align: left;
+        padding: 0.75rem 0.85rem;
+        line-height: 1.18;
+        font-weight: 700;
+    }
+    div.stButton > button:hover {
+        border-color: #2e715e;
+        color: #1f6f55;
+        background: #eef6f1;
+    }
+    .stage-caption {
+        color: #687477;
+        font-size: 0.84rem;
+        margin-top: -0.5rem;
+        min-height: 2.4rem;
+    }
+    .stage-guide {
+        display: inline-block;
+        color: #1f6f55;
+        background: #e7f2ec;
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 0.18rem 0.42rem;
+        border-radius: 0.25rem;
+        margin-top: 0.15rem;
+    }
+    .selected-strip {
+        background: #172126;
+        color: white;
+        padding: 0.9rem 1rem;
+        margin: 0.5rem 0 1.2rem 0;
+    }
+    .selected-strip b {
+        color: #d8eadf;
     }
     .panel {
         border: 1px solid #d9d1c1;
@@ -559,6 +670,54 @@ st.markdown(
         color: #687477;
         font-size: 0.9rem;
     }
+    .info-card, .list-card {
+        border: 1px solid #d9d1c1;
+        background: #fffdf8;
+        padding: 1rem 1.05rem;
+        margin-bottom: 1rem;
+        min-height: 12rem;
+    }
+    .info-card h3, .list-card h3 {
+        margin: 0 0 0.55rem 0;
+        font-size: 1.05rem;
+    }
+    .info-card p {
+        color: #536064;
+        line-height: 1.45;
+        margin-bottom: 0;
+    }
+    .card-footer {
+        color: #1f6f55;
+        background: #e7f2ec;
+        padding: 0.35rem 0.5rem;
+        margin-top: 0.7rem;
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+    .list-card ul {
+        margin: 0.35rem 0 0 1.1rem;
+        padding: 0;
+    }
+    .list-card li {
+        margin-bottom: 0.45rem;
+        color: #536064;
+        line-height: 1.35;
+    }
+    .guideline-card {
+        border: 1px solid #d9d1c1;
+        background: #fffdf8;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.75rem;
+    }
+    .guideline-card h4 {
+        margin: 0 0 0.35rem 0;
+        font-size: 1rem;
+    }
+    .guideline-card p {
+        color: #536064;
+        margin: 0.2rem 0;
+        line-height: 1.35;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -580,13 +739,48 @@ st.markdown(
 )
 
 
+if "category" not in st.session_state:
+    st.session_state.category = list(ONTOLOGY.keys())[0]
+
+
+st.markdown(
+    """
+    <div class="map-wrap">
+        <div class="map-title">
+            <h2>Ontology Process Map</h2>
+            <span>Click a stage to open its process details and guideline rationale.</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+first_row = st.columns(5)
+second_row = st.columns(4)
+for index, (stage, caption, guide) in enumerate(PROCESS_FLOW):
+    row = first_row if index < 5 else second_row
+    with row[index if index < 5 else index - 5]:
+        if st.button(stage, key=f"stage_{stage}"):
+            st.session_state.category = stage
+        st.markdown(
+            f"""
+            <div class="stage-caption">
+                {caption}<br><span class="stage-guide">{guide}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
 with st.sidebar:
     st.header("Ontology Menu")
     category = st.radio(
         "Development process",
         list(ONTOLOGY.keys()),
+        index=list(ONTOLOGY.keys()).index(st.session_state.category),
         label_visibility="collapsed",
     )
+    st.session_state.category = category
     item = st.selectbox("Ontology item", list(ONTOLOGY[category]["items"].keys()))
     st.divider()
     st.caption("Use the menu above as the ontology tree. The selected item opens its detail page.")
@@ -595,17 +789,19 @@ with st.sidebar:
 category_data = ONTOLOGY[category]
 item_data = category_data["items"][item]
 
-top_left, top_right = st.columns([2, 1])
-with top_left:
-    st.subheader(category)
-    st.write(category_data["description"])
-with top_right:
-    st.markdown("**Selected item**")
-    st.info(item)
-
+primary_guides = " / ".join(item_data["guidelines"][:3])
+st.markdown(
+    f"""
+    <div class="selected-strip">
+        <b>{category}</b> · {category_data["description"]}<br>
+        Selected item: <b>{item}</b> · Primary references: <b>{primary_guides}</b>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.markdown(f"## {item}")
-st.write(item_data["definition"])
+render_card("Definition", item_data["definition"], "Ontology item", "green")
 
 st.markdown(
     f"""
@@ -618,17 +814,14 @@ st.markdown(
 )
 
 
-detail_col, evidence_col = st.columns([1.25, 1])
+detail_col, data_col, evidence_col = st.columns([1.15, 0.9, 1])
 
 with detail_col:
-    st.markdown("### Detailed Information")
-    for detail in item_data["details"]:
-        st.markdown(f"- {detail}")
+    render_list_card("Detailed Information", item_data["details"])
 
-    st.markdown("### Key Data Elements")
-    for datum in item_data["data"]:
-        st.markdown(f"- {datum}")
-
+with data_col:
+    render_list_card("Key Data Elements", item_data["data"])
+    
 with evidence_col:
     st.markdown("### CTD / Evidence Location")
     st.markdown(
@@ -644,16 +837,21 @@ with evidence_col:
 
 
 st.markdown("### Guideline Details")
-tabs = st.tabs(item_data["guidelines"])
-for tab, guideline_name in zip(tabs, item_data["guidelines"]):
+guide_cols = st.columns(2)
+for index, guideline_name in enumerate(item_data["guidelines"]):
     guideline = GUIDELINES[guideline_name]
-    with tab:
-        st.markdown(f"#### {guideline_name}: {guideline['title']}")
-        st.markdown("**Scope**")
-        st.write(guideline["scope"])
-        st.markdown("**Why it applies here**")
-        st.write(guideline["rationale"])
-        st.markdown(f"[Open reference]({guideline['url']})")
+    with guide_cols[index % 2]:
+        st.markdown(
+            f"""
+            <div class="guideline-card">
+                <h4>{guideline_name}: {guideline["title"]}</h4>
+                <p><b>Scope:</b> {guideline["scope"]}</p>
+                <p><b>Why it applies:</b> {guideline["rationale"]}</p>
+                <p><a href="{guideline["url"]}" target="_blank">Open reference</a></p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 st.markdown("### Ontology Relationship Examples")
@@ -687,4 +885,3 @@ st.code(relationship_examples.get(item, "OntologyItem --alignedWith--> Guideline
 
 st.markdown("### Full Ontology Index")
 st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
-

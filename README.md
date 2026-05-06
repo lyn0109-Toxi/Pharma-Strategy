@@ -4,6 +4,7 @@ An English Streamlit app for exploring the pharmaceutical development process as
 
 The app provides a clickable process menu and detailed pages for each ontology item, including:
 
+- A visual ontology process map at the top of the app
 - Definition and detailed information
 - Key data elements
 - CTD / evidence location
