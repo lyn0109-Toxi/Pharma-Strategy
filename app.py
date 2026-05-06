@@ -742,8 +742,25 @@ def render_landing_navigation():
         unsafe_allow_html=True,
     )
     playbook_cols = st.columns(4)
+    playbook_themes = {
+        "api_supplier_change": ("material", "M"),
+        "dissolution_failure": ("quality", "Q"),
+        "cqa_spec_method": ("development", "D"),
+        "post_approval_change": ("lifecycle", "L"),
+    }
     for index, (playbook_key, playbook) in enumerate(SITUATION_PLAYBOOKS.items()):
         with playbook_cols[index % 4]:
+            theme, mark = playbook_themes[playbook_key]
+            st.markdown(
+                f"""
+                <div class="visual-node {theme}">
+                    <div class="visual-mark">{mark}</div>
+                    <div class="visual-lines"><i></i><i></i><i></i></div>
+                    <span>{playbook["category"].split(".", 1)[1].strip()}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             if st.button(
                 f"{playbook['label']}\n\n{playbook['category'].split('.', 1)[1].strip()}",
                 key=f"playbook_{playbook_key}",
@@ -764,21 +781,31 @@ def render_landing_navigation():
         unsafe_allow_html=True,
     )
     map_nodes = [
-        ("1. Drug Entity", "01", "Drug Entity", "API | Product | Excipient", "Q11 Q7 Q8"),
-        ("2. Pharmaceutical Development", "02", "Development", "QTPP | CQA | CMA/CPP", "Q8 Q9"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops | Validation", "Q10 Q13"),
-        ("4. Quality System", "04", "Quality System", "Spec | Method | Impurity", "Q6 Q2 Q14"),
-        ("5. Stability", "05", "Stability", "Shelf Life | Storage", "Q1"),
-        ("6. Safety and Efficacy", "06", "Safety & Efficacy", "Nonclinical | Clinical", "M3 S E"),
-        ("7. Regulatory Documentation", "07", "Regulatory Docs", "CTD | DMF | QOS", "M4 PQ/CMC"),
-        ("8. Risk and Lifecycle", "08", "Risk & Lifecycle", "QRM | CAPA | Change", "Q9 Q10 Q12"),
-        ("9. FDA Modernization", "09", "FDA Modernization", "Structured Data | AI | NAMs", "FDA ICH"),
+        ("1. Drug Entity", "01", "Drug Entity", "API | Product | Excipient", "Q11 Q7 Q8", "material", "A"),
+        ("2. Pharmaceutical Development", "02", "Development", "QTPP | CQA | CMA/CPP", "Q8 Q9", "development", "C"),
+        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops | Validation", "Q10 Q13", "process", "P"),
+        ("4. Quality System", "04", "Quality System", "Spec | Method | Impurity", "Q6 Q2 Q14", "quality", "Q"),
+        ("5. Stability", "05", "Stability", "Shelf Life | Storage", "Q1", "stability", "T"),
+        ("6. Safety and Efficacy", "06", "Safety & Efficacy", "Nonclinical | Clinical", "M3 S E", "safety", "S"),
+        ("7. Regulatory Documentation", "07", "Regulatory Docs", "CTD | DMF | QOS", "M4 PQ/CMC", "docs", "R"),
+        ("8. Risk and Lifecycle", "08", "Risk & Lifecycle", "QRM | CAPA | Change", "Q9 Q10 Q12", "lifecycle", "L"),
+        ("9. FDA Modernization", "09", "FDA Modernization", "Structured Data | AI | NAMs", "FDA ICH", "modern", "AI"),
     ]
 
     top_row = st.columns(4)
     for index, node in enumerate(map_nodes[:4]):
-        category, number, title, objects, guides = node
+        category, number, title, objects, guides, theme, mark = node
         with top_row[index]:
+            st.markdown(
+                f"""
+                <div class="visual-node {theme}">
+                    <div class="visual-mark">{mark}</div>
+                    <div class="visual-lines"><i></i><i></i><i></i></div>
+                    <span>{guides}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             if st.button(
                 f"{number}  {title}\n\n{objects}\nGuideline: {guides}",
                 key=f"map_node_{category}",
@@ -801,8 +828,18 @@ def render_landing_navigation():
 
     bottom_row = st.columns(5)
     for index, node in enumerate(map_nodes[4:]):
-        category, number, title, objects, guides = node
+        category, number, title, objects, guides, theme, mark = node
         with bottom_row[index]:
+            st.markdown(
+                f"""
+                <div class="visual-node {theme}">
+                    <div class="visual-mark">{mark}</div>
+                    <div class="visual-lines"><i></i><i></i><i></i></div>
+                    <span>{guides}</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             if st.button(
                 f"{number}  {title}\n\n{objects}\nGuideline: {guides}",
                 key=f"map_node_{category}",
@@ -945,6 +982,87 @@ st.markdown(
         padding: 0.35rem 0.4rem;
         font-size: 0.78rem;
     }
+    .visual-node {
+        position: relative;
+        min-height: 5.7rem;
+        border-radius: 0.75rem;
+        padding: 0.8rem;
+        margin-bottom: 0.35rem;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.48);
+        box-shadow: 0 14px 28px rgba(23, 33, 38, 0.1);
+    }
+    .visual-node:before {
+        content: "";
+        position: absolute;
+        right: -2.1rem;
+        top: -2.1rem;
+        width: 6.6rem;
+        height: 6.6rem;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+    }
+    .visual-node:after {
+        content: "";
+        position: absolute;
+        left: 0.8rem;
+        right: 0.8rem;
+        bottom: 0.7rem;
+        height: 0.35rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.5);
+    }
+    .visual-mark {
+        position: relative;
+        display: inline-grid;
+        place-items: center;
+        width: 3.1rem;
+        height: 3.1rem;
+        border-radius: 0.9rem;
+        background: rgba(255,255,255,0.92);
+        color: #172126;
+        font-size: 1.2rem;
+        font-weight: 950;
+        box-shadow: 0 8px 18px rgba(23, 33, 38, 0.12);
+    }
+    .visual-lines {
+        position: absolute;
+        right: 0.85rem;
+        top: 1rem;
+        display: grid;
+        gap: 0.28rem;
+        width: 4.6rem;
+    }
+    .visual-lines i {
+        display: block;
+        height: 0.42rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.78);
+    }
+    .visual-lines i:nth-child(2) {
+        width: 75%;
+    }
+    .visual-lines i:nth-child(3) {
+        width: 48%;
+    }
+    .visual-node span {
+        position: absolute;
+        left: 0.85rem;
+        bottom: 1.25rem;
+        color: rgba(255,255,255,0.92);
+        font-size: 0.78rem;
+        font-weight: 950;
+        letter-spacing: 0;
+    }
+    .visual-node.material { background: linear-gradient(135deg, #236b9a 0%, #123d61 100%); }
+    .visual-node.development { background: linear-gradient(135deg, #2f9b77 0%, #176f58 100%); }
+    .visual-node.process { background: linear-gradient(135deg, #f39b2f 0%, #d97825 100%); }
+    .visual-node.quality { background: linear-gradient(135deg, #1b8b69 0%, #0d5d49 100%); }
+    .visual-node.stability { background: linear-gradient(135deg, #9a6a1f 0%, #df9c3c 100%); }
+    .visual-node.safety { background: linear-gradient(135deg, #174b78 0%, #3f67a5 100%); }
+    .visual-node.docs { background: linear-gradient(135deg, #1f6f55 0%, #2f8e73 100%); }
+    .visual-node.lifecycle { background: linear-gradient(135deg, #9a5877 0%, #d97825 100%); }
+    .visual-node.modern { background: linear-gradient(135deg, #5b3476 0%, #236b9a 100%); }
     .mini-map-card, .ontology-node-card {
         border: 1px solid #cddce3;
         background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
