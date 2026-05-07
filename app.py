@@ -798,40 +798,45 @@ def render_list_card(title, values, css_class="list-card"):
         """,
         unsafe_allow_html=True,
     )
+def open_category(category):
+    st.query_params["category"] = category
+    if "item" in st.query_params:
+        del st.query_params["item"]
+    if "playbook" in st.query_params:
+        del st.query_params["playbook"]
+    st.session_state.category = category
+    st.rerun()
 
 
+def open_playbook(playbook_key):
+    playbook = SITUATION_PLAYBOOKS[playbook_key]
+    st.query_params["category"] = playbook["category"]
+    st.query_params["item"] = playbook["item"]
+    st.query_params["playbook"] = playbook_key
+    st.session_state.category = playbook["category"]
+    st.rerun()
 
 
 def render_landing_navigation():
-    """Render the premium interactive Evidence Map for the landing page."""
-    
-    # ── Map Nodes Data ───────────────────────────────────────────────────────
+    """Render a reliable clickable ontology map using native Streamlit buttons."""
     map_nodes = [
-        {"id": "1. Drug Entity", "num": "01", "title": "Material", "sub": "API · Product · Excipient", "ich": "ICH Q11 / Q7 / Q8", "class": "material", "icon": "material"},
-        {"id": "2. Pharmaceutical Development", "num": "02", "title": "Product Design", "sub": "QTPP · CQA · CMA/CPP", "ich": "ICH Q8 / Q9", "class": "development", "icon": "development"},
-        {"id": "3. Manufacturing Process", "num": "03", "title": "Manufacturing", "sub": "Unit Ops · Validation", "ich": "ICH Q10 / Q13", "class": "process", "icon": "process"},
-        {"id": "4. Quality System", "num": "04", "title": "Quality Evidence", "sub": "Spec · Method · Impurity", "ich": "ICH Q6 / Q2 / Q14", "class": "quality", "icon": "quality"},
-        {"id": "5. Stability", "num": "05", "title": "Stability", "sub": "Shelf Life · Storage", "ich": "ICH Q1", "class": "stability", "icon": "stability"},
-        {"id": "6. Safety and Efficacy", "num": "06", "title": "Benefit-Risk", "sub": "Nonclinical · Clinical", "ich": "ICH M3 / S / E", "class": "safety", "icon": "safety"},
-        {"id": "7. Regulatory Documentation", "num": "07", "title": "Submission", "sub": "CTD · DMF · QOS", "ich": "ICH M4 / PQ-CMC", "class": "docs", "icon": "docs"},
-        {"id": "8. Risk and Lifecycle", "num": "08", "title": "Lifecycle", "sub": "QRM · CAPA · Change", "ich": "ICH Q9 / Q10 / Q12", "class": "lifecycle", "icon": "lifecycle"},
-        {"id": "9. FDA Modernization", "num": "09", "title": "Modern Evidence", "sub": "Structured Data · AI · NAMs", "ich": "FDA / ICH", "class": "modern", "icon": "modern"},
+        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8"),
+        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9"),
+        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13"),
+        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14"),
+        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1"),
+        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E"),
+        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC"),
+        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12"),
+        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH"),
     ]
 
-    # ── SVG Icons Library ──────────────────────────────────────────────────
-    icons = {
-        "material": '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
-        "development": '<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
-        "process": '<svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
-        "quality": '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg>',
-        "stability": '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
-        "safety": '<svg viewBox="0 0 24 24"><path d="M12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7zm0-12c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/><path d="M12 11V7h-1v4H8v1h3v4h1v-4h3v-1h-3z"/></svg>',
-        "docs": '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
-        "lifecycle": '<svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>',
-        "modern": '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
-    }
+    def render_node_button(node, key_prefix):
+        category, number, title, objects, guides = node
+        label = f"{number}  {title}\n{objects}\n{guides}"
+        if st.button(label, key=f"{key_prefix}_{category}", help=f"Open {category} details"):
+            open_category(category)
 
-    # ── Hero Section (Start Here & Title & Guideline Layer) ────────────────
     st.markdown(
         """
         <div class="landing-map-hero">
@@ -849,51 +854,37 @@ def render_landing_navigation():
             </div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
-    # ── Build Grid Items ──────────────────────────────────────────────────
-    grid_items_html = ""
-    for i, node in enumerate(map_nodes):
-        # Insert spacer and core after 4th node (between 04 and 05)
-        if i == 4:
-            core_url = f"/?category={map_nodes[7]['id'].replace(' ', '+')}"
-            grid_items_html += f"""
-            <div class="map-row-spacer"></div>
-            <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center; position: relative;">
-                <a href="{core_url}" class="research-core" style="text-decoration: none;" target="_self">
-                    <span>Evidence Core</span>
-                    <b>Control Strategy</b>
-                    <i>Guideline-backed decisions</i>
-                </a>
-            </div>
-            """
-        
-        # Build individual node
-        url = f"/?category={node['id'].replace(' ', '+')}"
-        icon_svg = icons.get(node['icon'], '')
-        grid_items_html += f"""
-        <a href="{url}" class="evidence-node {node['class']}" target="_self">
-            <div class="node-badge">{node['num']}</div>
-            <div class="node-icon">{icon_svg}</div>
-            <strong>{node['title']}</strong>
-            <em>{node['sub']}</em>
-            <small>{node['ich']}</small>
-        </a>
-        """
+    top_cols = st.columns([1.18, 1, 1, 1.08], gap="large")
+    for column, node in zip(top_cols, map_nodes[:4]):
+        with column:
+            render_node_button(node, "top_map")
 
-    # ── Final Render ──────────────────────────────────────────────────────
-    final_html = f"""
-    <div class="evidence-map-shell">
-        <div class="golden-path golden-path-one"></div>
-        <div class="golden-path golden-path-two"></div>
-        <div class="golden-path golden-path-three"></div>
-        <div class="evidence-grid">
-            {grid_items_html}
+    st.markdown(
+        """
+        <div class="evidence-core-strip">
+            <span>Evidence Core</span>
+            <b>Control Strategy</b>
+            <i>Guideline-backed decisions</i>
         </div>
-    </div>
-    """
-    st.markdown(final_html, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
+
+    lower_left, lower_mid, lower_right = st.columns([1.25, 1.85, 1.1], gap="large")
+    with lower_left:
+        render_node_button(map_nodes[5], "bottom_map")
+    with lower_mid:
+        mid_a, mid_b = st.columns(2, gap="large")
+        with mid_a:
+            render_node_button(map_nodes[6], "bottom_map")
+        with mid_b:
+            render_node_button(map_nodes[7], "bottom_map")
+    with lower_right:
+        render_node_button(map_nodes[4], "bottom_map")
+        render_node_button(map_nodes[8], "bottom_map")
 
 
 st.markdown(
