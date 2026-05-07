@@ -1,2271 +1,973 @@
+import base64
+from pathlib import Path
+import io
+
 import streamlit as st
-from ontology_graph import render_full_ontology_graph, render_ontology_graph
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from scipy import stats
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
-st.set_page_config(
-    page_title="Pharmaceutical Development Ontology",
-    page_icon="P",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-
-
-GUIDELINES = {
-    "ICH Q1": {
-        "title": "Stability Testing",
-        "scope": "Stability study design, storage conditions, shelf-life estimation, photostability, and data evaluation.",
-        "rationale": "Use when the ontology item must prove that product quality remains acceptable over time.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q2(R2)": {
-        "title": "Validation of Analytical Procedures",
-        "scope": "Specificity, accuracy, precision, linearity, range, detection limit, quantitation limit, and robustness.",
-        "rationale": "Use when the ontology item depends on a test method being reliable for its intended purpose.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q3": {
-        "title": "Impurities",
-        "scope": "Organic impurities, degradation products, residual solvents, and elemental impurities.",
-        "rationale": "Use when the ontology item must identify, qualify, limit, or monitor impurity risk.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q6": {
-        "title": "Specifications",
-        "scope": "Test procedures and acceptance criteria for drug substances and drug products.",
-        "rationale": "Use when the ontology item defines what must be tested and what acceptance criteria apply.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q7": {
-        "title": "GMP for Active Pharmaceutical Ingredients",
-        "scope": "GMP expectations for API manufacture, control, documentation, materials, and quality management.",
-        "rationale": "Use when the ontology item concerns API manufacturing practice and GMP control.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q8": {
-        "title": "Pharmaceutical Development",
-        "scope": "QTPP, CQA, formulation development, process understanding, and control strategy.",
-        "rationale": "Use when the ontology item explains how product design creates the intended quality profile.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q9": {
-        "title": "Quality Risk Management",
-        "scope": "Risk identification, risk analysis, risk control, risk communication, and risk review.",
-        "rationale": "Use when the ontology item requires risk-based prioritization or justification.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q10": {
-        "title": "Pharmaceutical Quality System",
-        "scope": "Quality system operation across development, technology transfer, commercial manufacturing, and discontinuation.",
-        "rationale": "Use when the ontology item must be controlled through deviation, CAPA, change control, or continual improvement.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q11": {
-        "title": "Development and Manufacture of Drug Substances",
-        "scope": "API manufacturing process development, starting materials, control strategy, and impurity control.",
-        "rationale": "Use when the ontology item concerns drug substance origin, route, control, or manufacturing knowledge.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q12": {
-        "title": "Lifecycle Management",
-        "scope": "Post-approval change management, established conditions, PACMP, and product lifecycle strategy.",
-        "rationale": "Use when the ontology item must support predictable regulatory change management after approval.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q13": {
-        "title": "Continuous Manufacturing",
-        "scope": "Development, implementation, operation, and control of continuous manufacturing.",
-        "rationale": "Use when the ontology item addresses continuous process design or real-time process control.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH Q14": {
-        "title": "Analytical Procedure Development",
-        "scope": "Analytical target profile, method development knowledge, method risk, and lifecycle management.",
-        "rationale": "Use when the ontology item must explain why an analytical method was designed in a particular way.",
-        "url": "https://www.ich.org/page/quality-guidelines",
-    },
-    "ICH M4": {
-        "title": "Common Technical Document",
-        "scope": "Standardized submission structure for quality, nonclinical, and clinical documentation.",
-        "rationale": "Use when the ontology item must be placed into a regulatory submission structure.",
-        "url": "https://www.ich.org/page/ctd",
-    },
-    "ICH M7": {
-        "title": "Mutagenic Impurities",
-        "scope": "Assessment and control of DNA-reactive mutagenic impurities.",
-        "rationale": "Use when impurity risk involves potential mutagenicity and patient safety limits.",
-        "url": "https://www.ich.org/page/multidisciplinary-guidelines",
-    },
-    "ICH M3": {
-        "title": "Nonclinical Safety Studies",
-        "scope": "Timing and scope of nonclinical safety studies to support clinical trials and marketing authorization.",
-        "rationale": "Use when the ontology item defines the nonclinical evidence package for human exposure.",
-        "url": "https://www.ich.org/page/multidisciplinary-guidelines",
-    },
-    "ICH S-Series": {
-        "title": "Safety Guidelines",
-        "scope": "Genotoxicity, safety pharmacology, reproductive toxicity, carcinogenicity, biotechnology products, and oncology products.",
-        "rationale": "Use when the ontology item concerns toxicology or nonclinical safety evidence.",
-        "url": "https://www.ich.org/page/safety-guidelines",
-    },
-    "ICH E-Series": {
-        "title": "Efficacy Guidelines",
-        "scope": "Clinical trial design, conduct, statistical principles, safety reporting, and clinical study reports.",
-        "rationale": "Use when the ontology item concerns clinical evidence and efficacy evaluation.",
-        "url": "https://www.ich.org/page/efficacy-guidelines",
-    },
-    "FDA PQ/CMC": {
-        "title": "Pharmaceutical Quality / CMC Structured Data",
-        "scope": "Structured CMC data elements for drug substance, drug product, specifications, batch analysis, and stability.",
-        "rationale": "Use when CMC information must become structured, reusable, and reviewable as data.",
-        "url": "https://www.fda.gov/industry/fda-data-standards-advisory-board/pharmaceutical-quality-chemistry-manufacturing-controls-pqcmc",
-    },
-    "FDA NAMs": {
-        "title": "New Approach Methodologies",
-        "scope": "Context of use, human biological relevance, technical characterization, and fit-for-purpose assessment.",
-        "rationale": "Use when nonclinical evidence includes human-relevant alternatives to conventional animal testing.",
-        "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/general-considerations-use-new-approach-methodologies-drug-development",
-    },
-    "FDA AI": {
-        "title": "AI for Regulatory Decision-Making",
-        "scope": "Context of use, model risk, credibility assessment, validation, and lifecycle maintenance.",
-        "rationale": "Use when AI model outputs are used to support regulatory or quality decisions.",
-        "url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/considerations-use-artificial-intelligence-support-regulatory-decision-making-drug-and-biological",
-    },
-}
+st.set_page_config(page_title="ToxiGuard AI", page_icon="TG", layout="wide")
 
 
-ONTOLOGY = {
-    "1. Drug Entity": {
-        "description": "Core product entities that define what the medicine is made of and how it is presented to patients.",
-        "items": {
-            "Drug Substance / API": {
-                "definition": "The active substance responsible for the intended pharmacological effect.",
-                "details": [
-                    "Origin and source of the active substance",
-                    "Manufacturing route and starting material strategy",
-                    "Physicochemical properties such as solubility, particle size, polymorphism, hygroscopicity, and water content",
-                    "Impurity profile, residual solvent risk, elemental impurity risk, and stability profile",
-                    "DMF or equivalent supplier-controlled evidence",
-                ],
-                "data": ["DMF Type II", "API CoA", "manufacturing flow", "impurity profile", "stability data", "batch analysis"],
-                "ctd": ["3.2.S.1 General Information", "3.2.S.2 Manufacture", "3.2.S.3 Characterisation", "3.2.S.4 Control of Drug Substance", "3.2.S.7 Stability"],
-                "guidelines": ["ICH Q11", "ICH Q7", "ICH Q3", "ICH Q1", "ICH M4"],
-                "rationale": "API evidence must prove identity, origin, manufacturing consistency, impurity control, GMP suitability, and stability. That is why Q11, Q7, Q3, Q1, and CTD Module 3.2.S are the core references.",
-            },
-            "Drug Product": {
-                "definition": "The finished dosage form containing the drug substance and excipients in the final presentation.",
-                "details": [
-                    "Dosage form, route of administration, strength, and packaging configuration",
-                    "Finished product specification and acceptance criteria",
-                    "Batch formula, manufacturing process, and process controls",
-                    "Dissolution, content uniformity, assay, impurities, microbial quality, or sterility depending on dosage form",
-                    "Shelf-life and storage condition justification",
-                ],
-                "data": ["QTPP", "CQA list", "finished product specification", "batch records", "batch analysis", "stability protocol and report"],
-                "ctd": ["3.2.P.1 Description and Composition", "3.2.P.2 Pharmaceutical Development", "3.2.P.3 Manufacture", "3.2.P.5 Control of Drug Product", "3.2.P.8 Stability"],
-                "guidelines": ["ICH Q8", "ICH Q6", "ICH Q1", "ICH Q2(R2)", "ICH Q14", "ICH M4"],
-                "rationale": "Drug product evidence must prove that formulation and process design produce a finished medicine with reproducible quality. Q8 supports development logic, Q6 supports specifications, Q1 supports stability, and Q2/Q14 support analytical control.",
-            },
-            "Excipient": {
-                "definition": "A non-active ingredient that supports manufacturability, stability, delivery, appearance, or patient use.",
-                "details": [
-                    "Excipient grade, compendial status, supplier qualification, and CoA review",
-                    "Functional role such as diluent, binder, disintegrant, lubricant, stabilizer, preservative, or solvent",
-                    "Compatibility with API and influence on dissolution, stability, and manufacturability",
-                    "Residual solvent, elemental impurity, microbial, or animal-origin risk when relevant",
-                ],
-                "data": ["excipient CoA", "pharmacopeial monograph", "supplier qualification", "compatibility study", "risk assessment"],
-                "ctd": ["3.2.P.1 Composition", "3.2.P.2 Pharmaceutical Development", "3.2.P.4 Control of Excipients"],
-                "guidelines": ["ICH Q8", "ICH Q9", "ICH Q3"],
-                "rationale": "Excipients are not pharmacologically active, but they can change CQAs. Q8 supports formulation rationale, Q9 supports risk-based evaluation, and Q3 applies when impurity risks are relevant.",
-            },
-        },
-    },
-    "2. Pharmaceutical Development": {
-        "description": "Design logic that connects target product performance to formulation, material attributes, process variables, and control strategy.",
-        "items": {
-            "QTPP": {
-                "definition": "Quality Target Product Profile: the prospective summary of product quality characteristics required for safety and efficacy.",
-                "details": [
-                    "Target dosage form, route, strength, release profile, patient use, packaging, and stability goal",
-                    "Defines what the product must become before formulation and process details are fixed",
-                    "Provides the anchor for CQA identification and control strategy design",
-                ],
-                "data": ["target product profile", "clinical/regulatory target", "dosage form target", "stability target"],
-                "ctd": ["3.2.P.2 Pharmaceutical Development", "Module 2.3 Quality Overall Summary"],
-                "guidelines": ["ICH Q8", "ICH Q9"],
-                "rationale": "QTPP is a Q8 development concept. Q9 is linked because QTPP drives risk-based selection of CQAs and controls.",
-            },
-            "CQA": {
-                "definition": "Critical Quality Attribute: a physical, chemical, biological, or microbiological property that should be controlled to ensure product quality.",
-                "details": [
-                    "Examples include assay, content uniformity, dissolution, impurities, pH, water content, sterility, and microbial limits",
-                    "CQAs connect patient-facing product performance to tests, acceptance criteria, process controls, and stability monitoring",
-                    "CQA criticality should be justified by patient risk and product performance impact",
-                ],
-                "data": ["CQA assessment", "risk ranking", "specification linkage", "method linkage", "stability linkage"],
-                "ctd": ["3.2.P.2 Pharmaceutical Development", "3.2.P.5 Control of Drug Product", "3.2.P.8 Stability"],
-                "guidelines": ["ICH Q8", "ICH Q9", "ICH Q6", "ICH Q1"],
-                "rationale": "CQAs originate from Q8 development logic. Q9 explains risk ranking, Q6 turns CQAs into specifications, and Q1 verifies whether CQAs remain controlled over time.",
-            },
-            "CMA / CPP": {
-                "definition": "Critical Material Attributes and Critical Process Parameters that can affect CQAs.",
-                "details": [
-                    "CMA examples: API particle size, polymorph, water content, excipient grade, and impurity burden",
-                    "CPP examples: blending time, granulation endpoint, drying temperature, compression force, coating parameters, and sterilization conditions",
-                    "CMA and CPP understanding supports design space, process control, validation, and lifecycle change management",
-                ],
-                "data": ["DoE results", "process development report", "material characterization", "risk assessment", "control strategy"],
-                "ctd": ["3.2.P.2 Pharmaceutical Development", "3.2.P.3 Manufacture", "3.2.P.3.5 Process Validation"],
-                "guidelines": ["ICH Q8", "ICH Q9", "ICH Q10", "ICH Q11"],
-                "rationale": "Q8 explains the link between formulation/process understanding and CQAs. Q9 ranks risk. Q10 governs lifecycle control. Q11 applies when the material attribute belongs to drug substance development.",
-            },
-        },
-    },
-    "3. Manufacturing Process": {
-        "description": "Manufacturing knowledge that shows how designed quality is reproduced batch after batch.",
-        "items": {
-            "Unit Operations": {
-                "definition": "Discrete manufacturing steps such as weighing, mixing, granulation, drying, milling, compression, coating, sterilization, filling, and packaging.",
-                "details": [
-                    "Each unit operation should be linked to the CQAs it can affect",
-                    "In-process controls should be justified by process risk and product performance",
-                    "Manufacturing description should be traceable to batch record and process validation evidence",
-                ],
-                "data": ["manufacturing flow diagram", "batch record", "IPC list", "equipment parameters", "process development report"],
-                "ctd": ["3.2.P.3 Manufacture", "3.2.P.3.3 Description of Manufacturing Process", "3.2.P.3.4 Controls of Critical Steps"],
-                "guidelines": ["ICH Q8", "ICH Q9", "ICH Q10"],
-                "rationale": "Manufacturing steps are selected and justified through Q8 process understanding, prioritized through Q9 risk management, and maintained through the Q10 quality system.",
-            },
-            "Process Validation": {
-                "definition": "Evidence that the manufacturing process can consistently deliver product meeting predetermined quality attributes.",
-                "details": [
-                    "Includes process design, process qualification, and continued process verification",
-                    "Should connect CPPs, IPCs, CQAs, batch analysis, and deviation/CAPA history",
-                    "Supports commercial manufacturing confidence and lifecycle control",
-                ],
-                "data": ["PV protocol", "PV report", "PPQ batches", "continued process verification", "deviation trend"],
-                "ctd": ["3.2.P.3.5 Process Validation and/or Evaluation"],
-                "guidelines": ["ICH Q8", "ICH Q9", "ICH Q10"],
-                "rationale": "Process validation must show that process knowledge and control strategy are effective. Q8 supports design understanding, Q9 supports risk-based controls, and Q10 supports ongoing verification.",
-            },
-            "Continuous Manufacturing": {
-                "definition": "A manufacturing approach where material is continuously input, processed, and output under an integrated control strategy.",
-                "details": [
-                    "Requires process dynamics, residence time distribution, diversion strategy, and real-time monitoring concepts",
-                    "Can connect strongly with PAT, model-based control, and continuous verification",
-                    "Requires clear linkage among process parameters, material traceability, and quality decisions",
-                ],
-                "data": ["control strategy", "residence time model", "diversion strategy", "PAT data", "process monitoring"],
-                "ctd": ["3.2.P.3 Manufacture", "3.2.P.5 Control of Drug Product"],
-                "guidelines": ["ICH Q13", "ICH Q8", "ICH Q9", "ICH Q10"],
-                "rationale": "Q13 is the direct reference for continuous manufacturing. Q8, Q9, and Q10 remain necessary because development logic, risk control, and quality system operation still apply.",
-            },
-        },
-    },
-    "4. Quality System": {
-        "description": "Specifications, test methods, validation evidence, and quality operations used to prove and maintain product quality.",
-        "items": {
-            "Specification": {
-                "definition": "A list of tests, analytical procedures, and acceptance criteria that define product or material quality.",
-                "details": [
-                    "Drug substance and drug product specifications should be separately defined",
-                    "Tests should be justified by CQAs, impurity risks, dosage form characteristics, and stability needs",
-                    "Acceptance criteria should be supported by development data, batch analysis, safety considerations, and stability data",
-                ],
-                "data": ["specification table", "acceptance criteria", "justification", "batch analysis", "stability trend"],
-                "ctd": ["3.2.S.4 Control of Drug Substance", "3.2.P.5 Control of Drug Product"],
-                "guidelines": ["ICH Q6", "ICH Q3", "ICH Q1", "ICH Q2(R2)", "ICH Q14"],
-                "rationale": "Q6 defines the specification framework. Q3 supports impurity limits. Q1 supports stability-related criteria. Q2 and Q14 support the methods used to measure each attribute.",
-            },
-            "Analytical Method": {
-                "definition": "A procedure used to measure a quality attribute such as assay, impurities, dissolution, water content, pH, or microbial quality.",
-                "details": [
-                    "Method purpose should be defined by an analytical target profile or equivalent intended use",
-                    "Method parameters and conditions should be justified through development knowledge",
-                    "Method performance should be validated against the intended use and product matrix",
-                    "Stability-indicating methods should demonstrate separation of degradation products when relevant",
-                ],
-                "data": ["method procedure", "ATP", "development report", "validation protocol", "validation report", "robustness data"],
-                "ctd": ["3.2.S.4.2 Analytical Procedures", "3.2.S.4.3 Validation", "3.2.P.5.2 Analytical Procedures", "3.2.P.5.3 Validation"],
-                "guidelines": ["ICH Q14", "ICH Q2(R2)", "ICH Q6", "ICH Q1"],
-                "rationale": "Q14 explains how and why the analytical procedure was developed. Q2(R2) proves that the method is valid for its intended use. Q6 connects the method to a specification, and Q1 is relevant when the method supports stability.",
-            },
-            "Impurity Control": {
-                "definition": "A control framework for process impurities, degradation products, residual solvents, elemental impurities, and mutagenic impurities.",
-                "details": [
-                    "Impurities should be classified by origin, toxicity concern, formation pathway, and control point",
-                    "Drug substance impurities and drug product degradation products should be distinguished",
-                    "Control strategy can include process controls, raw material controls, specifications, and stability monitoring",
-                ],
-                "data": ["impurity profile", "qualification threshold", "toxicological assessment", "forced degradation", "control strategy"],
-                "ctd": ["3.2.S.3.2 Impurities", "3.2.S.4 Control of Drug Substance", "3.2.P.5 Control of Drug Product", "3.2.P.8 Stability"],
-                "guidelines": ["ICH Q3", "ICH M7", "ICH Q11", "ICH Q1"],
-                "rationale": "Q3 is the core impurity guideline family. M7 applies to mutagenic impurities. Q11 connects impurity control to API manufacture. Q1 applies when impurity increase is a stability concern.",
-            },
-        },
-    },
-    "5. Stability": {
-        "description": "Evidence that quality remains acceptable across shelf life, storage, transport, and use conditions.",
-        "items": {
-            "Stability Study": {
-                "definition": "A planned study to monitor whether drug substance or drug product quality changes over time under defined conditions.",
-                "details": [
-                    "Includes long-term, accelerated, intermediate, photostability, and in-use studies where relevant",
-                    "Monitors attributes such as assay, impurities, dissolution, pH, water content, microbial quality, and appearance",
-                    "Supports shelf life, retest period, storage condition, and packaging suitability",
-                ],
-                "data": ["stability protocol", "timepoint results", "trend analysis", "storage condition", "shelf-life proposal"],
-                "ctd": ["3.2.S.7 Stability", "3.2.P.8 Stability"],
-                "guidelines": ["ICH Q1", "ICH Q2(R2)", "ICH Q14"],
-                "rationale": "Q1 is the direct stability guideline family. Q2/Q14 are linked when stability-indicating analytical methods are required to produce reliable stability data.",
-            },
-            "Shelf Life and Storage": {
-                "definition": "The approved period and conditions under which product quality is expected to remain within specification.",
-                "details": [
-                    "Derived from stability data, statistical evaluation, packaging suitability, and degradation behavior",
-                    "Must be consistent with product labeling and distribution conditions",
-                    "Can be affected by post-approval changes in formulation, process, site, or packaging",
-                ],
-                "data": ["stability model", "expiry dating", "storage statement", "labeling text", "packaging data"],
-                "ctd": ["3.2.P.8 Stability", "Module 1 Labeling when region-specific"],
-                "guidelines": ["ICH Q1", "ICH Q12"],
-                "rationale": "Q1 supports the scientific basis for shelf life and storage conditions. Q12 becomes relevant when lifecycle changes could affect approved stability commitments.",
-            },
-        },
-    },
-    "6. Safety and Efficacy": {
-        "description": "Nonclinical and clinical evidence that supports patient exposure, benefit, risk, and intended use.",
-        "items": {
-            "Nonclinical Evidence": {
-                "definition": "Pharmacology, toxicology, safety pharmacology, genotoxicity, and related evidence supporting human use.",
-                "details": [
-                    "Defines whether a candidate can proceed into clinical testing",
-                    "Links toxicology findings, exposure margins, safety pharmacology, and risk management",
-                    "For oncology or biotechnology products, product-specific ICH safety guidance may apply",
-                ],
-                "data": ["pharmacology report", "toxicology report", "TK/PK data", "safety pharmacology", "genotoxicity"],
-                "ctd": ["Module 4 Nonclinical Study Reports", "Module 2.4 Nonclinical Overview", "Module 2.6 Nonclinical Summaries"],
-                "guidelines": ["ICH M3", "ICH S-Series", "ICH M4"],
-                "rationale": "M3 defines timing and scope of nonclinical safety studies. The S-series provides safety-specific expectations. M4 defines how nonclinical evidence is submitted.",
-            },
-            "Clinical Evidence": {
-                "definition": "Human study evidence used to evaluate efficacy, safety, dose, population, and benefit-risk.",
-                "details": [
-                    "Includes Phase 1, Phase 2, Phase 3, and post-marketing evidence where relevant",
-                    "Connects protocol, endpoints, statistical analysis, clinical study report, and labeling claims",
-                    "May connect to biomarkers, companion diagnostics, and real-world evidence depending on product strategy",
-                ],
-                "data": ["protocol", "CSR", "statistical analysis plan", "efficacy endpoints", "safety database"],
-                "ctd": ["Module 5 Clinical Study Reports", "Module 2.5 Clinical Overview", "Module 2.7 Clinical Summary"],
-                "guidelines": ["ICH E-Series", "ICH M4"],
-                "rationale": "The E-series governs clinical trial design, conduct, analysis, and reporting. M4 defines how clinical evidence is structured in the submission.",
-            },
-        },
-    },
-    "7. Regulatory Documentation": {
-        "description": "Submission structures and referenced documents that make product knowledge reviewable by regulators.",
-        "items": {
-            "CTD Module 3": {
-                "definition": "The quality module of the Common Technical Document, covering drug substance and drug product CMC evidence.",
-                "details": [
-                    "3.2.S covers drug substance information",
-                    "3.2.P covers drug product information",
-                    "Module 2.3 summarizes quality evidence in the Quality Overall Summary",
-                    "A strong ontology should map every quality node to a CTD location",
-                ],
-                "data": ["Module 2.3 QOS", "3.2.S", "3.2.P", "specification tables", "stability summaries"],
-                "ctd": ["Module 2.3 Quality Overall Summary", "Module 3 Quality"],
-                "guidelines": ["ICH M4", "FDA PQ/CMC"],
-                "rationale": "M4 defines the CTD structure. FDA PQ/CMC is relevant because CMC information is moving toward more structured, data-oriented formats.",
-            },
-            "DMF / Supplier Evidence": {
-                "definition": "Confidential supplier-controlled information referenced to support API, excipient, packaging, or other material quality.",
-                "details": [
-                    "Type II DMF commonly supports API information",
-                    "Type III DMF supports packaging material",
-                    "Type IV DMF supports excipients, colorants, flavors, or related materials",
-                    "Letter of Authorization enables the applicant to reference confidential supplier information",
-                ],
-                "data": ["DMF number", "LOA", "supplier CoA", "quality agreement", "change notification"],
-                "ctd": ["3.2.S drug substance references", "3.2.P.4 excipient references", "3.2.P.7 container closure references"],
-                "guidelines": ["ICH Q7", "ICH Q11", "ICH M4"],
-                "rationale": "DMF evidence supports confidential material knowledge. Q7 and Q11 apply when the referenced information concerns API GMP, manufacture, and control. M4 defines how references are placed in the submission.",
-            },
-        },
-    },
-    "8. Risk and Lifecycle": {
-        "description": "Risk-based and lifecycle-based control of product knowledge after development and approval.",
-        "items": {
-            "Quality Risk Management": {
-                "definition": "A systematic process for assessing, controlling, communicating, and reviewing quality risk.",
-                "details": [
-                    "Can be applied to CQA selection, CPP ranking, specification justification, method robustness, supplier risk, and change impact",
-                    "Typical tools include FMEA, HACCP, risk ranking, and decision trees",
-                    "Risk outputs should be traceable to control strategy and lifecycle monitoring",
-                ],
-                "data": ["risk assessment", "FMEA", "risk ranking", "risk review", "control action"],
-                "ctd": ["3.2.P.2 Pharmaceutical Development", "3.2.P.3 Manufacture", "3.2.P.5 Control of Drug Product"],
-                "guidelines": ["ICH Q9", "ICH Q10"],
-                "rationale": "Q9 is the direct guideline for quality risk management. Q10 is linked because risk outputs must be managed inside the pharmaceutical quality system.",
-            },
-            "Lifecycle Change Management": {
-                "definition": "Management of post-approval changes in a way that preserves product quality and regulatory commitments.",
-                "details": [
-                    "Changes may affect materials, process, site, equipment, specification, analytical method, packaging, or stability commitments",
-                    "A useful ontology should show which CQA, CPP, method, CTD section, and guideline are impacted",
-                    "Established conditions and post-approval change management plans can make change strategy more predictable",
-                ],
-                "data": ["change request", "impact assessment", "established conditions", "PACMP", "CAPA", "PQR/APR"],
-                "ctd": ["Module 3 Quality", "regional post-approval change submissions"],
-                "guidelines": ["ICH Q9", "ICH Q10", "ICH Q12"],
-                "rationale": "Q9 supports change risk assessment, Q10 governs quality system execution, and Q12 provides the lifecycle regulatory framework for post-approval changes.",
-            },
-        },
-    },
-    "9. FDA Modernization": {
-        "description": "Modern evidence layers that extend conventional development evidence toward structured data, NAMs, and AI credibility.",
-        "items": {
-            "PQ/CMC Structured Data": {
-                "definition": "A structured data approach to CMC information including drug substance, drug product, specification, batch analysis, and stability.",
-                "details": [
-                    "Transforms CMC content from narrative documents into reusable, reviewable data elements",
-                    "Fits naturally with an ontology because each CMC element can be mapped to a node, relation, and evidence source",
-                    "Supports future readiness for more structured regulatory submissions",
-                ],
-                "data": ["drug substance data", "drug product data", "specifications", "batch analysis", "stability data"],
-                "ctd": ["Module 2.3 Quality Overall Summary", "Module 3 Quality"],
-                "guidelines": ["FDA PQ/CMC", "ICH M4", "ICH Q6", "ICH Q1"],
-                "rationale": "FDA PQ/CMC is relevant when CMC evidence must become structured data. M4 anchors the CTD structure, while Q6 and Q1 define key specification and stability data elements.",
-            },
-            "NAMs Evidence": {
-                "definition": "New Approach Methodologies that can support nonclinical evidence through human-relevant models, in vitro systems, organoids, MPS, or computational approaches.",
-                "details": [
-                    "Requires clear context of use",
-                    "Requires human biological relevance",
-                    "Requires technical characterization and limitations",
-                    "Requires fit-for-purpose justification and weight-of-evidence integration",
-                ],
-                "data": ["context of use", "model characterization", "validation evidence", "weight-of-evidence matrix"],
-                "ctd": ["Module 4 Nonclinical", "Module 2.4 Nonclinical Overview", "Module 2.6 Nonclinical Summaries"],
-                "guidelines": ["FDA NAMs", "ICH M3", "ICH S-Series"],
-                "rationale": "FDA NAMs guidance supports the evaluation of alternative evidence. M3 and the S-series remain necessary because NAMs evidence still supports nonclinical safety decisions.",
-            },
-            "AI Credibility": {
-                "definition": "Evidence that an AI model used for regulatory or quality decision support is credible for its stated context of use.",
-                "details": [
-                    "Defines context of use and model role in decision-making",
-                    "Evaluates model risk and potential decision impact",
-                    "Documents validation, verification, limitations, monitoring, and lifecycle maintenance",
-                    "Should be linked to the quality or regulatory decision the model supports",
-                ],
-                "data": ["context of use", "model risk assessment", "validation data", "monitoring plan", "model change log"],
-                "ctd": ["Relevant CTD section depending on AI use case", "quality system records when used in GMP context"],
-                "guidelines": ["FDA AI", "ICH Q9", "ICH Q10"],
-                "rationale": "FDA AI guidance is relevant when AI supports regulatory decision-making. Q9 supports model risk assessment, and Q10 applies when AI use is embedded in the pharmaceutical quality system.",
-            },
-        },
-    },
-}
+def image_to_data_uri(path):
+    if not path.exists():
+        return ""
+    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return f"data:image/png;base64,{encoded}"
 
 
-def flatten_items():
+genotoxicity_image = Path(__file__).with_name("genotoxicity.png")
+genotoxicity_uri = image_to_data_uri(genotoxicity_image)
+
+
+def to_float(value):
+    try:
+        return float(value.strip().replace("%", ""))
+    except (AttributeError, ValueError):
+        return None
+
+
+def assess_impurities(df):
+    origin_actions = {
+        "degradation product": "Link to forced degradation pathway and stability-indicating method.",
+        "raw material": "Check supplier qualification, raw material specification, and carryover control.",
+        "unreacted starting material": "Confirm purge factor, process clearance, and residual starting material control.",
+        "process impurity": "Assess process origin, purge strategy, and batch-to-batch trend.",
+        "residual solvent": "Compare with ICH Q3C class limit and daily exposure.",
+        "unknown impurity": "Identify structure, assess qualification threshold, and evaluate genotoxic alert.",
+    }
+
     rows = []
-    for category, category_data in ONTOLOGY.items():
-        for item, item_data in category_data["items"].items():
-            rows.append(
-                {
-                    "Category": category,
-                    "Ontology Item": item,
-                    "Primary Guidelines": ", ".join(item_data["guidelines"]),
-                    "CTD / Evidence Location": "; ".join(item_data["ctd"][:2]),
-                }
+    if df is None or df.empty:
+        return rows
+
+    for index, row in df.iterrows():
+        code = str(row.get("Impurity Code", "")).strip()
+        chemical_name = str(row.get("Chemical Name", "")).strip()
+        origin = str(row.get("Origin", "")).strip()
+        observed_val = row.get("Observed (%)", None)
+        limit_val = row.get("Specification (%)", None)
+        concern = str(row.get("Concern", "")).strip()
+
+        if not code or pd.isna(code) or code == "nan":
+            continue
+
+        try:
+            observed = float(observed_val) if not pd.isna(observed_val) else None
+        except ValueError:
+            observed = None
+
+        try:
+            limit = float(limit_val) if not pd.isna(limit_val) else None
+        except ValueError:
+            limit = None
+
+        observed_text = f"{observed:.3g}" if observed is not None else ""
+        limit_text = f"{limit:.3g}" if limit is not None else ""
+
+        origin_note = origin_actions.get(
+            origin.lower(),
+            "Clarify impurity origin and link the control strategy to the manufacturing process.",
+        )
+
+        if observed is None or limit is None:
+            status = "Review needed"
+            action = "Check numeric result and specification format."
+        elif observed <= limit:
+            status = "Within specification"
+            action = f"Document as controlled under current specification. {origin_note}"
+        else:
+            status = "Above specification"
+            action = (
+                "Investigate root cause, toxicological qualification, and regulatory impact. "
+                f"{origin_note}"
             )
+
+        rows.append(
+            {
+                "Impurity Code": code,
+                "Impurity Chemical Name": chemical_name,
+                "Origin": origin,
+                "Observed (%)": observed_text,
+                "Specification (%)": limit_text,
+                "Concern": concern,
+                "Status": status,
+                "Regulatory Action": action,
+            }
+        )
     return rows
 
 
-def search_ontology(term):
-    tokens = [token.lower() for token in term.split() if token.strip()]
-    if not tokens:
-        return []
-
-    results = []
-    for category, category_data in ONTOLOGY.items():
-        for item, item_data in category_data["items"].items():
-            weighted_text = " ".join(
-                [
-                    category,
-                    item,
-                    item,
-                    item_data["definition"],
-                    item_data["rationale"],
-                    " ".join(item_data["details"]),
-                    " ".join(item_data["data"]),
-                    " ".join(item_data["ctd"]),
-                    " ".join(item_data["guidelines"]),
-                ]
-            ).lower()
-            score = sum(weighted_text.count(token) for token in tokens)
-            if score:
-                results.append((score, category, item, item_data))
-    return sorted(results, key=lambda result: (-result[0], result[1], result[2]))
-
-
-def guideline_chip(name):
-    return f"<span class='chip'>{name}</span>"
-
-
-PROCESS_FLOW = [
-    ("1. Drug Entity", "API, product, excipient", "Q11 / Q8", "Material identity"),
-    ("2. Pharmaceutical Development", "QTPP, CQA, CMA, CPP", "Q8 / Q9", "Product design"),
-    ("3. Manufacturing Process", "Unit operations, validation", "Q8 / Q10", "Process control"),
-    ("4. Quality System", "Specs, methods, impurities", "Q6 / Q2 / Q14", "Quality evidence"),
-    ("5. Stability", "Shelf life and storage", "Q1", "Time-based proof"),
-    ("6. Safety and Efficacy", "Nonclinical and clinical", "M3 / S / E", "Benefit and risk"),
-    ("7. Regulatory Documentation", "CTD, DMF, evidence", "M4 / PQ-CMC", "Submission structure"),
-    ("8. Risk and Lifecycle", "Risk and change control", "Q9 / Q10 / Q12", "Lifecycle control"),
-    ("9. FDA Modernization", "PQ-CMC, NAMs, AI", "FDA / ICH", "Modern evidence"),
-]
-
-
-CASE_STUDY = {
-    "title": "Revenue vs Trust: Bioequivalence Risk After Supplier Change",
-    "summary": "A marketed product with major portfolio revenue failed comparative dissolution against the reference product after an API supplier change. Root cause pointed to API particle size distribution variability, requiring supplier requalification, remanufacturing, comparative dissolution, and a post-approval variation dossier.",
-    "decision": "Leadership must decide whether to proactively raise a marketing authorization issue even when short-term revenue may be affected.",
-    "signals": [
-        "API particle size distribution",
-        "supplier qualification",
-        "comparative dissolution",
-        "bioequivalence risk",
-        "post-approval change",
-        "variation dossier",
-        "R&D / Quality / Regulatory / Commercial alignment",
+KNOWN_IMPURITY_REFERENCES = {
+    "acetaminophen": [
+        {
+            "Reference Impurity": "p-Aminophenol / 4-Aminophenol",
+            "Impurity Chemical Name": "4-Aminophenol",
+            "Likely Origin": "Raw material or degradation product",
+            "Why It Matters": "Potential carryover from synthesis and known degradation-related concern",
+            "Control Strategy": "Raw material control, release/stability method, degradation pathway justification",
+            "Reference Basis": "USP/EP/JP monograph preferred; verify with DMF or validated literature if compendial data are unavailable",
+        },
+        {
+            "Reference Impurity": "4-Nitrophenol",
+            "Impurity Chemical Name": "4-Nitrophenol",
+            "Likely Origin": "Raw material or synthetic intermediate",
+            "Why It Matters": "May indicate upstream material carryover or incomplete process clearance",
+            "Control Strategy": "Supplier qualification, incoming raw material specification, purge assessment",
+            "Reference Basis": "USP/EP monograph preferred; verify with literature only as supportive evidence",
+        },
+        {
+            "Reference Impurity": "Acetanilide-related impurity",
+            "Impurity Chemical Name": "Acetanilide or route-specific acetanilide analog",
+            "Likely Origin": "Process impurity",
+            "Why It Matters": "Can be associated with process route or side reaction profile",
+            "Control Strategy": "Process impurity mapping, batch trend review, method specificity check",
+            "Reference Basis": "USP/EP approved specification preferred; confirm exact identity with validated method",
+        },
     ],
-    "category_links": {
-        "1. Drug Entity": "API material attributes, supplier evidence, and DMF/CoA review become the first root-cause layer.",
-        "2. Pharmaceutical Development": "CQA, CMA, and QTPP logic explain why API particle size can affect dissolution performance.",
-        "3. Manufacturing Process": "Re-manufacturing and batch evidence are needed to prove the process restores intended performance.",
-        "4. Quality System": "Dissolution method, specification linkage, and comparative test interpretation become decision-critical.",
-        "5. Stability": "Stability commitments may need review if the new supplier or re-manufactured product changes quality risk.",
-        "6. Safety and Efficacy": "Therapeutic performance and patient trust remain the final business justification.",
-        "7. Regulatory Documentation": "Variation dossier, CTD Module 3 updates, and supplier evidence must be submission-ready.",
-        "8. Risk and Lifecycle": "QRM, change control, CAPA, and stakeholder escalation govern the lifecycle response.",
-        "9. FDA Modernization": "Structured CMC data can make supplier, material attribute, dissolution, and change impact traceable.",
-    },
+    "telmisartan": [
+        {
+            "Reference Impurity": "Telmisartan related substance / process-related analog",
+            "Impurity Chemical Name": "Route-specific telmisartan related compound",
+            "Likely Origin": "Process impurity",
+            "Why It Matters": "May arise from coupling, cyclization, or side reaction depending on route",
+            "Control Strategy": "Route-specific impurity map, purge factor, batch trend review",
+            "Reference Basis": "USP/EP monograph preferred; verify exact identity with DMF or literature if needed",
+        },
+        {
+            "Reference Impurity": "Residual starting material or intermediate",
+            "Impurity Chemical Name": "Route-specific starting material or intermediate",
+            "Likely Origin": "Unreacted starting material",
+            "Why It Matters": "Indicates incomplete conversion or insufficient purge during manufacturing",
+            "Control Strategy": "Starting material specification, process clearance, residual control",
+            "Reference Basis": "USP/EP monograph preferred when available; replace with route-specific starting material name",
+        },
+        {
+            "Reference Impurity": "Oxidative or stress degradation product",
+            "Impurity Chemical Name": "Route-specific oxidative degradation product",
+            "Likely Origin": "Degradation product",
+            "Why It Matters": "May appear during forced degradation or long-term stability",
+            "Control Strategy": "Forced degradation, stability-indicating method, shelf-life trend evaluation",
+            "Reference Basis": "USP/EP monograph preferred when available; confirm under validated stability protocol",
+        },
+    ],
 }
 
 
-SITUATION_PLAYBOOKS = {
-    "api_supplier_change": {
-        "label": "API Supplier Change",
-        "lead": "Use when an API supplier, DMF, route, particle size, polymorph, or CoA profile changes.",
-        "category": "1. Drug Entity",
-        "item": "Drug Substance / API",
-        "checklist": [
-            "Confirm supplier qualification, DMF/LOA status, and GMP evidence",
-            "Compare API particle size, polymorph, water content, assay, and impurity profile",
-            "Assess whether material attributes can affect dissolution, assay, content uniformity, or stability",
-            "Manufacture representative batch and compare product performance",
-            "Document change control, QRM conclusion, and regulatory reporting category",
-        ],
-        "evidence": [
-            "Supplier qualification record",
-            "DMF or supplier technical package",
-            "API CoA and batch analysis",
-            "Particle size / polymorph data",
-            "Comparative dissolution",
-            "Change control and QRM report",
-        ],
-        "ctd": ["3.2.S.2", "3.2.S.3", "3.2.S.4", "3.2.P.2", "3.2.P.5"],
-        "guidelines": ["ICH Q11", "ICH Q9", "ICH Q10", "ICH Q12", "ICH M4"],
-        "decision": "If the supplier change can affect a CQA, treat it as a lifecycle regulatory change and prepare comparative CMC evidence.",
-    },
-    "dissolution_failure": {
-        "label": "Dissolution Failure",
-        "lead": "Use when product dissolution is out of trend, non-equivalent, or inconsistent with the reference product.",
-        "category": "4. Quality System",
-        "item": "Analytical Method",
-        "checklist": [
-            "Confirm method suitability, medium, apparatus, rpm, sampling time, and analyst/equipment factors",
-            "Compare API particle size, formulation composition, process parameters, and batch history",
-            "Check whether dissolution is a CQA linked to QTPP and clinical/BE performance",
-            "Run comparative dissolution and trend against historical approved batches",
-            "Open deviation/CAPA and assess regulatory impact if approved quality may be affected",
-        ],
-        "evidence": [
-            "Dissolution profile",
-            "Analytical method and validation",
-            "Batch record",
-            "API material attributes",
-            "OOS/OOT investigation",
-            "CAPA and change impact assessment",
-        ],
-        "ctd": ["3.2.P.2", "3.2.P.3", "3.2.P.5", "3.2.P.8"],
-        "guidelines": ["ICH Q8", "ICH Q9", "ICH Q6", "ICH Q2(R2)", "ICH Q14"],
-        "decision": "If dissolution failure is linked to material or process change, connect Quality System evidence to Risk/Lifecycle and Regulatory Documentation.",
-    },
-    "cqa_spec_method": {
-        "label": "CQA / Spec / Method",
-        "lead": "Use when setting CQAs, specifications, acceptance criteria, analytical methods, or validation packages.",
-        "category": "2. Pharmaceutical Development",
-        "item": "CQA",
-        "checklist": [
-            "Define QTPP and identify patient-relevant CQAs",
-            "Link each CQA to CMA, CPP, specification, analytical method, and stability monitoring",
-            "Justify acceptance criteria using development, batch, safety, and stability data",
-            "Confirm method purpose through ATP or intended use",
-            "Validate methods and document lifecycle method knowledge",
-        ],
-        "evidence": [
-            "QTPP/CQA assessment",
-            "Risk ranking",
-            "Specification justification",
-            "Analytical procedure",
-            "Method validation report",
-            "Stability-indicating evidence",
-        ],
-        "ctd": ["3.2.P.2", "3.2.P.5", "3.2.P.8", "Module 2.3"],
-        "guidelines": ["ICH Q8", "ICH Q9", "ICH Q6", "ICH Q2(R2)", "ICH Q14"],
-        "decision": "A quality attribute becomes operationally useful only when it is connected to a test, criterion, control point, and lifecycle monitoring plan.",
-    },
-    "post_approval_change": {
-        "label": "Post-Approval Change",
-        "lead": "Use when formulation, process, site, supplier, specification, method, or packaging changes after approval.",
-        "category": "8. Risk and Lifecycle",
-        "item": "Lifecycle Change Management",
-        "checklist": [
-            "Describe the proposed change and affected product knowledge elements",
-            "Map impact to CQA, CMA, CPP, analytical method, specification, and stability",
-            "Define comparative evidence needed before implementation",
-            "Decide reporting category and prepare variation dossier if required",
-            "Update control strategy, PQS records, and post-change monitoring",
-        ],
-        "evidence": [
-            "Change control",
-            "QRM assessment",
-            "Comparability protocol",
-            "Batch and analytical comparison",
-            "Stability commitment",
-            "Variation dossier / CTD update",
-        ],
-        "ctd": ["3.2.S", "3.2.P.2", "3.2.P.3", "3.2.P.5", "3.2.P.8"],
-        "guidelines": ["ICH Q9", "ICH Q10", "ICH Q12", "ICH M4"],
-        "decision": "If established conditions or approved quality commitments are affected, prepare a structured regulatory change package.",
-    },
+def get_impurity_references(compound_name):
+    compound = compound_name.strip()
+    key = compound.lower()
+    if not compound:
+        return []
+    if key in KNOWN_IMPURITY_REFERENCES:
+        return KNOWN_IMPURITY_REFERENCES[key]
+
+    return [
+        {
+            "Reference Impurity": f"{compound} related substances",
+            "Impurity Chemical Name": "To be confirmed from USP/EP or validated method",
+            "Likely Origin": "To be confirmed",
+            "Why It Matters": "Compound-specific impurity profile should be verified from authoritative references",
+            "Control Strategy": "Search USP/EP monograph first; if unavailable, use DMF, validated method, forced degradation, and literature",
+            "Reference Basis": "No verified entry loaded in demo library; user should confirm for the searched compound",
+        }
+    ]
+
+
+st.markdown(
+    """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap');
+
+:root {
+    --primary-blue: #123d61;
+    --accent-gold: #f2c84b;
+    --accent-green: #1b8b69;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --neon-glow: 0 0 20px rgba(242, 200, 75, 0.5);
 }
 
+.stApp { 
+    background: radial-gradient(circle at 10% 10%, #f0f4f8 0%, #e8edf3 100%);
+    font-family: 'Inter', sans-serif;
+}
 
-def render_card(title, body, footer=None, accent="green"):
-    accent_map = {
-        "green": "#2e715e",
-        "blue": "#236b9a",
-        "gold": "#9a6a1f",
-        "red": "#ad4f3f",
-        "dark": "#172126",
-    }
-    color = accent_map.get(accent, accent_map["green"])
-    footer_html = f"<div class='card-footer'>{footer}</div>" if footer else ""
+.block-container { max-width: 1320px; padding-top: 2rem; }
+
+/* --- Premium Visualization Stage --- */
+.ontology-visual-stage {
+    position: relative;
+    min-height: 24rem;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    border: 1px solid var(--glass-border);
+    background: 
+        linear-gradient(135deg, #e8f4fb 0%, #f8fbfc 48%, #dceef7 100%);
+    box-shadow: 0 30px 60px rgba(8, 32, 51, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+/* Moving Scan Line Animation */
+.ontology-visual-stage::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    box-shadow: var(--neon-glow);
+    animation: scanMove 4s linear infinite;
+    z-index: 10;
+}
+
+@keyframes scanMove {
+    0% { top: 0; opacity: 0; }
+    50% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.title-ribbon {
+    position: absolute;
+    left: 50%;
+    top: 2rem;
+    transform: translateX(-50%);
+    padding: 1rem 2.5rem;
+    text-align: center;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 4rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    z-index: 5;
+}
+
+.title-ribbon h1 {
+    margin: 0;
+    color: var(--primary-blue);
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 950;
+    letter-spacing: -1px;
+}
+
+/* --- Sophisticated Neural Loader --- */
+.neural-loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background: var(--glass-bg);
+    border-radius: 2rem;
+    border: 1px solid var(--glass-border);
+    margin: 2rem 0;
+}
+
+.neural-node-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.neural-node {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: var(--primary-blue);
+    border-radius: 50%;
+    animation: pulseNode 1.5s ease-in-out infinite;
+}
+
+.node-1 { top: 0; left: 50%; animation-delay: 0s; }
+.node-2 { top: 30%; left: 100%; animation-delay: 0.2s; }
+.node-3 { top: 80%; left: 80%; animation-delay: 0.4s; }
+.node-4 { top: 80%; left: 20%; animation-delay: 0.6s; }
+.node-5 { top: 30%; left: 0%; animation-delay: 0.8s; }
+
+@keyframes pulseNode {
+    0%, 100% { transform: scale(1); opacity: 0.3; box-shadow: none; }
+    50% { transform: scale(1.5); opacity: 1; box-shadow: var(--neon-glow); }
+}
+
+.loading-text {
+    margin-top: 2rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--primary-blue);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* --- Golden Thread Animation --- */
+.golden-thread-premium {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 15rem;
+    height: 6px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #f2c84b, #1b8b69, #236b9a);
+    background-size: 200% 100%;
+    animation: flowLight 3s linear infinite;
+    box-shadow: var(--neon-glow);
+}
+
+@keyframes flowLight {
+    0% { background-position: 100% 0%; }
+    100% { background-position: -100% 0%; }
+}
+
+/* --- Premium Evidence Nodes --- */
+.evidence-node-premium {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.2rem;
+    padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+    cursor: pointer;
+    text-align: center;
+}
+
+.evidence-node-premium:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(18, 61, 97, 0.12);
+    background: white;
+    border-color: var(--accent-gold);
+}
+
+.node-number-premium {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-blue);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    margin: 0 auto 1rem;
+}
+
+/* --- Streamlit Overrides --- */
+div.stButton > button {
+    border-radius: 1rem !important;
+    border: 1px solid var(--glass-border) !important;
+    background: var(--glass-bg) !important;
+    color: var(--primary-blue) !important;
+    font-weight: 700 !important;
+    transition: all 0.3s !important;
+}
+
+div.stButton > button:hover {
+    border-color: var(--accent-gold) !important;
+    box-shadow: var(--neon-glow) !important;
+    transform: translateY(-2px);
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+def render_premium_loader(text="ANALYZING ONTOLOGY NODES"):
     st.markdown(
         f"""
-        <div class="info-card" style="border-top:4px solid {color};">
-            <h3>{title}</h3>
-            <p>{body}</p>
-            {footer_html}
+        <div class="neural-loader-container">
+            <div class="neural-node-wrapper">
+                <div class="neural-node node-1"></div>
+                <div class="neural-node node-2"></div>
+                <div class="neural-node node-3"></div>
+                <div class="neural-node node-4"></div>
+                <div class="neural-node node-5"></div>
+            </div>
+            <div class="loading-text">{{text}}</div>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
-
-def render_list_card(title, values, css_class="list-card"):
-    items = "".join([f"<li>{value}</li>" for value in values])
-    st.markdown(
-        f"""
-        <div class="{css_class}">
-            <h3>{title}</h3>
-            <ul>{items}</ul>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_process_image(selected_category=None):
+def render_premium_visual_stage():
     st.markdown(
         """
         <div class="ontology-visual-stage">
-            <div class="situation-panel">
-                <b>Situation Shortcuts</b>
-                <div class="situation-symbol">!</div>
-                <strong>Solving</strong>
-                <span>Start from the manufacturing problem.</span>
-            </div>
             <div class="title-ribbon">
-                <h1>PHARMACEUTICAL DEVELOPMENT</h1>
-                <p>ONTOLOGY MAP & EVIDENCE NAVIGATOR</p>
+                <h1>ToxiGuard AI</h1>
+                <p style="margin:0; font-weight:700; color:#1b8b69; font-size:0.9rem;">ONTOLOGY & REGULATORY NAVIGATOR</p>
             </div>
-            <div class="ontology-mini-menu">
-                <b>Ontology Map</b>
-                <span>CMC</span>
-                <span>Regulatory</span>
-                <span>Quality</span>
-                <span>Lifecycle</span>
-            </div>
-            <div class="central-ribbon">
-                <strong>DEVELOPMENT EVIDENCE NAVIGATOR</strong>
-                <span>Material to Modern Evidence</span>
-            </div>
-            <div class="golden-thread"></div>
-            <div class="focus-orbit">
-                <strong>Evidence Core</strong>
-                <span>CMC · Quality · Risk · Submission</span>
+            <div class="golden-thread-premium"></div>
+            <div style="position:absolute; bottom:2rem; width:100%; text-align:center;">
+                <span style="background:rgba(255,255,255,0.8); padding:0.5rem 1.5rem; border-radius:2rem; font-weight:800; color:#123d61; font-size:0.8rem; border:1px solid #eee;">
+                    EVIDENCE CORE: CMC · QUALITY · RISK · SUBMISSION
+                </span>
             </div>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
-
-def open_category(category):
-    st.query_params["category"] = category
-    if "item" in st.query_params:
-        del st.query_params["item"]
-    if "playbook" in st.query_params:
-        del st.query_params["playbook"]
-    st.session_state.category = category
-    st.rerun()
-
-
-def open_playbook(playbook_key):
-    playbook = SITUATION_PLAYBOOKS[playbook_key]
-    st.query_params["category"] = playbook["category"]
-    st.query_params["item"] = playbook["item"]
-    st.query_params["playbook"] = playbook_key
-    st.session_state.category = playbook["category"]
-    st.rerun()
-
-
-def render_landing_navigation():
-    map_nodes = [
-        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8"),
-        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13"),
-        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14"),
-        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1"),
-        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E"),
-        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC"),
-        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12"),
-        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH"),
-    ]
-
-    def render_node_button(node, key_prefix):
-        category, number, title, objects, guides = node
-        label = f"{number}  {title}\n{objects}\n{guides}"
-        if st.button(label, key=f"{key_prefix}_{category}", help=f"Open {category} details"):
-            open_category(category)
-
-    st.markdown(
-        """
-        <div class="landing-map-hero">
-            <div>
-                <b>Start Here</b>
-                <span>Click a visual node to open evidence details.</span>
-            </div>
-            <section>
-                <h1>Pharmaceutical Development</h1>
-                <p>Ontology Map & Evidence Navigator</p>
-            </section>
-            <div>
-                <b>Guideline Layer</b>
-                <span>CMC · Quality · Regulatory · Modern AI</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    top_cols = st.columns([1.18, 1, 1, 1.08], gap="large")
-    for column, node in zip(top_cols, map_nodes[:4]):
-        with column:
-            render_node_button(node, "top_map")
-
-    st.markdown(
-        """
-        <div class="evidence-core-strip">
-            <span>Evidence Core</span>
-            <b>Control Strategy</b>
-            <i>Guideline-backed decisions</i>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    lower_left, lower_mid, lower_right = st.columns([1.25, 1.85, 1.1], gap="large")
-    with lower_left:
-        render_node_button(map_nodes[5], "bottom_map")
-    with lower_mid:
-        mid_a, mid_b = st.columns(2, gap="large")
-        with mid_a:
-            render_node_button(map_nodes[6], "bottom_map")
-        with mid_b:
-            render_node_button(map_nodes[7], "bottom_map")
-    with lower_right:
-        render_node_button(map_nodes[4], "bottom_map")
-        render_node_button(map_nodes[8], "bottom_map")
+render_premium_visual_stage()
 
 
 st.markdown(
     """
-    <style>
-    .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 3rem;
-        max-width: 1320px;
-    }
-    h1, h2, h3 {
-        letter-spacing: 0;
-    }
-    .ontology-visual-stage {
-        position: relative;
-        min-height: 21rem;
-        border-radius: 1rem;
-        overflow: hidden;
-        margin-bottom: 1rem;
-        border: 1px solid #b8d1df;
-        background:
-            radial-gradient(circle at 17% 78%, rgba(242, 200, 75, 0.26), transparent 19%),
-            radial-gradient(circle at 62% 62%, rgba(27, 139, 105, 0.16), transparent 22%),
-            linear-gradient(135deg, #e8f4fb 0%, #f8fbfc 48%, #dceef7 100%);
-        box-shadow: 0 24px 54px rgba(8, 32, 51, 0.18);
-    }
-    .ontology-visual-stage:before {
-        content: "";
-        position: absolute;
-        inset: 4.8rem 2rem auto 2rem;
-        height: 0.45rem;
-        border-radius: 999px;
-        background: linear-gradient(90deg, transparent 0%, #f2c84b 12%, #f2c84b 86%, transparent 100%);
-        box-shadow: 0 0 18px rgba(242, 200, 75, 0.9);
-    }
-    .title-ribbon {
-        position: absolute;
-        left: 29%;
-        right: 25%;
-        top: 1rem;
-        padding: 0.65rem 1rem 0.75rem 1rem;
-        text-align: center;
-        background: rgba(255,255,255,0.68);
-        border: 2px solid rgba(255,255,255,0.9);
-        border-radius: 0 0 2.2rem 2.2rem;
-        box-shadow: 0 10px 24px rgba(8, 32, 51, 0.08);
-    }
-    .title-ribbon h1 {
-        margin: 0;
-        color: #123d61;
-        font-size: 2rem;
-        line-height: 1.04;
-        font-weight: 950;
-    }
-    .title-ribbon p {
-        margin: 0.2rem 0 0 0;
-        color: #17364a;
-        font-size: 1.3rem;
-        font-weight: 900;
-    }
-    .situation-panel {
-        position: absolute;
-        left: 1rem;
-        top: 1rem;
-        width: 25%;
-        min-height: 9rem;
-        padding: 0.85rem 1rem;
-        border-radius: 0.8rem;
-        color: white;
-        background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
-        box-shadow: 0 16px 34px rgba(8, 32, 51, 0.2);
-    }
-    .situation-panel b {
-        display: block;
-        font-size: 1.15rem;
-        margin-bottom: 0.8rem;
-    }
-    .situation-symbol {
-        float: left;
-        display: grid;
-        place-items: center;
-        width: 3.5rem;
-        height: 3.5rem;
-        margin-right: 0.8rem;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.95);
-        color: #0d5d49;
-        font-size: 2rem;
-        font-weight: 950;
-    }
-    .situation-panel strong {
-        display: block;
-        font-size: 1.35rem;
-    }
-    .situation-panel span {
-        display: block;
-        margin-top: 0.2rem;
-        color: #d8eadf;
-        line-height: 1.25;
-    }
-    .ontology-mini-menu {
-        position: absolute;
-        right: 1rem;
-        top: 1rem;
-        width: 11rem;
-        padding: 0.75rem;
-        border-radius: 0.7rem;
-        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
-        color: white;
-        box-shadow: 0 14px 28px rgba(8, 32, 51, 0.22);
-    }
-    .ontology-mini-menu b {
-        display: block;
-        font-size: 1.05rem;
-        margin-bottom: 0.45rem;
-    }
-    .ontology-mini-menu span {
-        display: block;
-        padding: 0.28rem 0.5rem;
-        margin: 0.2rem 0;
-        border-radius: 0.35rem;
-        background: rgba(255,255,255,0.14);
-        font-weight: 800;
-    }
-    .central-ribbon {
-        position: absolute;
-        left: 29%;
-        right: 29%;
-        top: 8.9rem;
-        padding: 0.75rem 1rem;
-        text-align: center;
-        color: white;
-        background: linear-gradient(135deg, #0d5d74 0%, #123d61 100%);
-        border-radius: 0.35rem;
-        box-shadow: 0 18px 34px rgba(8, 32, 51, 0.2);
-    }
-    .central-ribbon strong {
-        display: block;
-        font-size: 1.25rem;
-        line-height: 1.08;
-    }
-    .central-ribbon span {
-        display: block;
-        color: #d8edf6;
-        font-size: 1rem;
-        font-weight: 900;
-    }
-    .golden-thread {
-        position: absolute;
-        left: 7%;
-        right: 7%;
-        top: 14.2rem;
-        height: 0.42rem;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 42%, #1b8b69 68%, #236b9a 100%);
-        box-shadow: 0 0 18px rgba(242, 200, 75, 0.8);
-    }
-    .focus-orbit {
-        position: absolute;
-        left: 43%;
-        top: 14.95rem;
-        width: 16rem;
-        min-height: 4.2rem;
-        padding: 0.85rem;
-        text-align: center;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.74);
-        border: 2px solid rgba(242, 200, 75, 0.65);
-        box-shadow: 0 0 24px rgba(242, 200, 75, 0.5);
-    }
-    .focus-orbit strong {
-        display: block;
-        color: #172126;
-        font-size: 1.05rem;
-    }
-    .focus-orbit span {
-        display: block;
-        color: #536064;
-        font-weight: 800;
-        font-size: 0.83rem;
-    }
-    .evidence-map-shell {
-        position: relative;
-        min-height: 46rem;
-        overflow: hidden;
-        border-radius: 1.1rem;
-        border: 1px solid #b7d1df;
-        background:
-            radial-gradient(circle at 11% 12%, rgba(255,255,255,0.92), transparent 12rem),
-            radial-gradient(circle at 64% 53%, rgba(242, 200, 75, 0.28), transparent 13rem),
-            radial-gradient(circle at 88% 19%, rgba(27, 139, 105, 0.18), transparent 12rem),
-            linear-gradient(135deg, #dceff7 0%, #f7fcff 46%, #d8ecf3 100%);
-        box-shadow: 0 26px 62px rgba(8, 32, 51, 0.18);
-        padding: 1.4rem;
-        margin: 0.2rem 0 1rem 0;
-    }
-    .evidence-map-shell:before,
-    .evidence-map-shell:after {
-        content: "";
-        position: absolute;
-        pointer-events: none;
-        opacity: 0.42;
-    }
-    .evidence-map-shell:before {
-        inset: 1.1rem;
-        border: 2px solid rgba(255,255,255,0.82);
-        border-radius: 1rem;
-    }
-    .evidence-map-shell:after {
-        right: 2.2rem;
-        top: 2rem;
-        width: 11rem;
-        height: 7rem;
-        background:
-            linear-gradient(90deg, rgba(18,61,97,0.2) 2px, transparent 2px) 0 0/1.1rem 1.1rem,
-            linear-gradient(rgba(18,61,97,0.16) 2px, transparent 2px) 0 0/1.1rem 1.1rem;
-        mask-image: linear-gradient(90deg, transparent 0%, #000 35%, transparent 100%);
-    }
-    .evidence-map-title {
-        position: relative;
-        z-index: 3;
-        width: min(48rem, 52%);
-        margin: 0 auto;
-        padding: 0.85rem 1.6rem 1rem 1.6rem;
-        text-align: center;
-        border-radius: 0 0 2.2rem 2.2rem;
-        background: rgba(255,255,255,0.78);
-        border: 2px solid rgba(255,255,255,0.94);
-        box-shadow: 0 12px 30px rgba(8, 32, 51, 0.1);
-    }
-    .evidence-map-title span {
-        display: block;
-        color: #123d61;
-        font-size: 2.45rem;
-        font-weight: 950;
-        line-height: 1;
-        text-transform: uppercase;
-    }
-    .evidence-map-title strong {
-        display: block;
-        margin-top: 0.25rem;
-        color: #17364a;
-        font-size: 1.35rem;
-        line-height: 1.1;
-        text-transform: uppercase;
-    }
-    .situation-chip, .mini-legend {
-        position: absolute;
-        z-index: 4;
-        top: 1.55rem;
-        border-radius: 0.8rem;
-        color: white;
-        box-shadow: 0 14px 30px rgba(8, 32, 51, 0.19);
-    }
-    .situation-chip {
-        left: 1.65rem;
-        width: 16rem;
-        padding: 0.95rem 1rem;
-        background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
-    }
-    .situation-chip b, .mini-legend b {
-        display: block;
-        font-size: 1.05rem;
-        margin-bottom: 0.28rem;
-    }
-    .situation-chip span {
-        color: #d8eadf;
-        font-size: 0.95rem;
-        font-weight: 750;
-        line-height: 1.25;
-    }
-    .mini-legend {
-        right: 1.65rem;
-        width: 12rem;
-        padding: 0.8rem;
-        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
-    }
-    .mini-legend span {
-        display: block;
-        padding: 0.25rem 0.5rem;
-        margin-top: 0.24rem;
-        border-radius: 0.35rem;
-        background: rgba(255,255,255,0.15);
-        font-weight: 850;
-        color: #f8fbfc;
-    }
-    .golden-path {
-        position: absolute;
-        z-index: 1;
-        left: 6%;
-        right: 6%;
-        height: 0.38rem;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 44%, #1b8b69 70%, #236b9a 100%);
-        box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
-    }
-    .golden-path-one { top: 12.6rem; }
-    .golden-path-two {
-        top: 25.2rem;
-        left: 8%;
-        right: 8%;
-        opacity: 0.68;
-    }
-    .golden-path-three {
-        top: 36.2rem;
-        left: 13%;
-        right: 12%;
-        opacity: 0.58;
-    }
-    .research-core {
-        position: absolute;
-        z-index: 2;
-        left: 50%;
-        top: 20.2rem;
-        transform: translateX(-50%);
-        width: 21rem;
-        height: 9.5rem;
-        display: grid;
-        place-items: center;
-        text-align: center;
-        border-radius: 50%;
-        background:
-            radial-gradient(circle, rgba(255,255,255,0.96) 0%, rgba(232,244,251,0.9) 62%, rgba(242,200,75,0.22) 100%);
-        border: 3px solid rgba(242, 200, 75, 0.7);
-        box-shadow: 0 0 35px rgba(242, 200, 75, 0.45);
-    }
-    .research-core span {
-        display: block;
-        color: #236b9a;
-        font-weight: 950;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-    }
-    .research-core b {
-        display: block;
-        color: #172126;
-        font-size: 1.55rem;
-        line-height: 1.05;
-    }
-    .research-core i {
-        display: block;
-        color: #536064;
-        font-style: normal;
-        font-weight: 800;
-        font-size: 0.85rem;
-    }
-    .evidence-grid {
-        position: relative;
-        z-index: 3;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 1rem;
-        margin-top: 2rem;
-        padding: 1rem 0.6rem 0.4rem 0.6rem;
-    }
-    .map-spacer {
-        grid-column: 1 / -1;
-        min-height: 9.4rem;
-    }
-    .evidence-node {
-        position: relative;
-        display: grid;
-        min-height: 12rem;
-        align-content: start;
-        gap: 0.42rem;
-        padding: 1rem;
-        border-radius: 1rem;
-        color: #172126;
-        text-decoration: none;
-        overflow: hidden;
-        isolation: isolate;
-        border: 2px solid rgba(255,255,255,0.76);
-        box-shadow: 0 18px 36px rgba(8, 32, 51, 0.13);
-        transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
-    }
-    .evidence-node:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 24px 48px rgba(8, 32, 51, 0.2);
-        filter: saturate(1.08);
-        text-decoration: none;
-    }
-    .evidence-node:before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -2;
-        background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.68) 100%);
-    }
-    .evidence-node:after {
-        content: "";
-        position: absolute;
-        right: -3.5rem;
-        bottom: -3.7rem;
-        width: 10rem;
-        height: 10rem;
-        z-index: -1;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.35);
-    }
-    .node-badge {
-        position: absolute;
-        left: 0.9rem;
-        top: 0.85rem;
-        display: grid;
-        place-items: center;
-        width: 2.4rem;
-        height: 2.4rem;
-        border-radius: 50%;
-        color: white;
-        background: rgba(18, 61, 97, 0.94);
-        font-size: 1rem;
-        font-weight: 950;
-        box-shadow: 0 8px 18px rgba(8,32,51,0.22);
-    }
-    .node-icon {
-        display: grid;
-        place-items: center;
-        width: 5.6rem;
-        height: 5.6rem;
-        margin: 1.45rem auto 0.2rem auto;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.84);
-        border: 2px solid rgba(255,255,255,0.92);
-        box-shadow: inset 0 0 0 0.35rem rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
-    }
-    .node-icon svg {
-        width: 3.7rem;
-        height: 3.7rem;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 3.2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-    .evidence-node strong {
-        display: block;
-        color: #172126;
-        font-size: 1.35rem;
-        font-weight: 950;
-        line-height: 1.05;
-        text-align: center;
-    }
-    .evidence-node em {
-        display: block;
-        color: #29383d;
-        font-size: 0.92rem;
-        font-style: normal;
-        font-weight: 850;
-        line-height: 1.18;
-        text-align: center;
-        min-height: 2.1rem;
-    }
-    .evidence-node small {
-        display: inline-grid;
-        justify-self: center;
-        margin-top: auto;
-        padding: 0.32rem 0.58rem;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.75);
-        color: #17364a;
-        font-size: 0.75rem;
-        font-weight: 950;
-        text-align: center;
-    }
-    .evidence-node.material { background: linear-gradient(135deg, #dff2fb 0%, #7eb4d4 100%); color: #236b9a; }
-    .evidence-node.development { background: linear-gradient(135deg, #e2f5ec 0%, #63b798 100%); color: #1f6f55; }
-    .evidence-node.process { background: linear-gradient(135deg, #fff0d9 0%, #f39b2f 100%); color: #9a4f19; }
-    .evidence-node.quality { background: linear-gradient(135deg, #e2f4eb 0%, #54a57a 100%); color: #176f58; }
-    .evidence-node.stability { background: linear-gradient(135deg, #fff1d5 0%, #df9c3c 100%); color: #9a6a1f; }
-    .evidence-node.safety { background: linear-gradient(135deg, #e0eef8 0%, #6aa0c9 100%); color: #174b78; }
-    .evidence-node.docs { background: linear-gradient(135deg, #e4f4ed 0%, #4da47b 100%); color: #1f6f55; }
-    .evidence-node.lifecycle { background: linear-gradient(135deg, #fff0df 0%, #e78533 100%); color: #ad5b22; }
-    .evidence-node.modern { background: linear-gradient(135deg, #e8e5f3 0%, #5f78b8 100%); color: #3a4c8a; }
-    @media (max-width: 980px) {
-        .evidence-map-shell {
-            min-height: auto;
-            padding: 1rem;
-        }
-        .evidence-map-title {
-            width: 100%;
-            margin-top: 5.8rem;
-        }
-        .evidence-map-title span {
-            font-size: 1.8rem;
-        }
-        .evidence-map-title strong {
-            font-size: 1.05rem;
-        }
-        .situation-chip, .mini-legend {
-            position: relative;
-            left: auto;
-            right: auto;
-            top: auto;
-            width: 100%;
-            margin-bottom: 0.7rem;
-        }
-        .mini-legend {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.35rem;
-        }
-        .mini-legend b {
-            grid-column: 1 / -1;
-        }
-        .golden-path, .research-core {
-            display: none;
-        }
-        .evidence-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-top: 1rem;
-        }
-        .map-spacer {
-            display: none;
-        }
-    }
-    @media (max-width: 620px) {
-        .evidence-grid {
-            grid-template-columns: 1fr;
-        }
-        .mini-legend {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-    .navigator-hero {
-        position: relative;
-        overflow: hidden;
-        background:
-            linear-gradient(135deg, rgba(18, 61, 97, 0.96) 0%, rgba(23, 33, 38, 0.97) 48%, rgba(27, 139, 105, 0.94) 100%);
-        color: white;
-        padding: 2rem 2.2rem 1.4rem 2.2rem;
-        border-radius: 0.8rem;
-        border: 1px solid #1f4f5b;
-        box-shadow: 0 22px 48px rgba(8, 32, 51, 0.16);
-        margin-bottom: 1rem;
-    }
-    .navigator-hero:before {
-        content: "";
-        position: absolute;
-        right: -8rem;
-        top: -9rem;
-        width: 24rem;
-        height: 24rem;
-        border-radius: 50%;
-        background: rgba(242, 200, 75, 0.13);
-    }
-    .navigator-kicker {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        color: #d8edf6;
-        padding: 0.3rem 0.6rem;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 900;
-        text-transform: uppercase;
-    }
-    .navigator-hero h1 {
-        position: relative;
-        margin: 0.75rem 0 0.45rem 0;
-        color: white;
-        font-size: 3rem;
-        line-height: 1.05;
-    }
-    .navigator-hero p {
-        position: relative;
-        max-width: 860px;
-        color: #d6e4df;
-        font-size: 1.05rem;
-        margin: 0 0 1.1rem 0;
-    }
-    .hero-flow, .flow-spine, .map-midline {
-        display: grid;
-        align-items: center;
-        gap: 0.55rem;
-    }
-    .hero-flow {
-        grid-template-columns: auto 1fr auto 1fr auto 1fr auto 1fr auto;
-        position: relative;
-        max-width: 960px;
-    }
-    .hero-flow span, .flow-spine span, .map-midline span {
-        display: inline-grid;
-        place-items: center;
-        min-height: 2rem;
-        border-radius: 999px;
-        font-weight: 900;
-        white-space: nowrap;
-    }
-    .hero-flow span {
-        background: rgba(255, 255, 255, 0.14);
-        color: white;
-        padding: 0.35rem 0.7rem;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-    }
-    .hero-flow i, .flow-spine i {
-        height: 0.35rem;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
-    }
-    .map-section {
-        margin: 1rem 0 0.65rem 0;
-        padding: 0.8rem 1rem;
-        border-radius: 0.65rem;
-        background: #f8fbfc;
-        border: 1px solid #cddce3;
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: center;
-    }
-    .map-section span {
-        color: #17364a;
-        font-size: 1.1rem;
-        font-weight: 950;
-    }
-    .map-section b {
-        color: #536064;
-        font-size: 0.9rem;
-    }
-    .map-section.ontology {
-        background: linear-gradient(135deg, #fffdf8 0%, #eef6f1 100%);
-        border-color: #d9d1c1;
-    }
-    .landing-map-hero {
-        display: grid;
-        grid-template-columns: 1fr 1.55fr 1fr;
-        gap: 1rem;
-        align-items: stretch;
-        padding: 1.05rem;
-        margin: 0.2rem 0 1rem 0;
-        border-radius: 1rem;
-        border: 1px solid #b7d1df;
-        background:
-            radial-gradient(circle at 14% 70%, rgba(242, 200, 75, 0.22), transparent 18rem),
-            radial-gradient(circle at 84% 20%, rgba(27, 139, 105, 0.16), transparent 16rem),
-            linear-gradient(135deg, #e6f4fb 0%, #f8fbfc 50%, #e1eef4 100%);
-        box-shadow: 0 24px 54px rgba(8, 32, 51, 0.14);
-    }
-    .landing-map-hero > div,
-    .landing-map-hero > section {
-        border-radius: 0.8rem;
-        padding: 1rem 1.1rem;
-        min-height: 7.2rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .landing-map-hero > div:first-child {
-        color: white;
-        background: linear-gradient(135deg, #0d5d49 0%, #2e715e 100%);
-    }
-    .landing-map-hero > div:last-child {
-        color: white;
-        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
-    }
-    .landing-map-hero b {
-        display: block;
-        font-size: 1.25rem;
-        line-height: 1.1;
-    }
-    .landing-map-hero span {
-        display: block;
-        margin-top: 0.45rem;
-        color: #d8eadf;
-        font-size: 0.95rem;
-        font-weight: 800;
-        line-height: 1.3;
-    }
-    .landing-map-hero section {
-        text-align: center;
-        background: rgba(255,255,255,0.78);
-        border: 2px solid rgba(255,255,255,0.9);
-    }
-    .landing-map-hero h1 {
-        margin: 0;
-        color: #123d61;
-        font-size: clamp(2rem, 4vw, 3.4rem);
-        line-height: 0.96;
-        font-weight: 950;
-        text-transform: uppercase;
-    }
-    .landing-map-hero p {
-        margin: 0.5rem 0 0 0;
-        color: #17364a;
-        font-size: clamp(1rem, 1.8vw, 1.45rem);
-        font-weight: 900;
-        text-transform: uppercase;
-    }
-    .evidence-core-strip {
-        position: relative;
-        margin: 1rem 0;
-        padding: 1rem 1.2rem;
-        text-align: center;
-        border-radius: 999px;
-        background:
-            linear-gradient(90deg, rgba(242, 200, 75, 0.82) 0%, rgba(255,255,255,0.88) 28%, rgba(255,255,255,0.94) 62%, rgba(46,113,94,0.55) 100%);
-        border: 2px solid rgba(242, 200, 75, 0.6);
-        box-shadow: 0 14px 30px rgba(8, 32, 51, 0.09);
-    }
-    .evidence-core-strip span,
-    .evidence-core-strip b,
-    .evidence-core-strip i {
-        display: block;
-        font-style: normal;
-    }
-    .evidence-core-strip span {
-        color: #236b9a;
-        font-size: 0.9rem;
-        font-weight: 950;
-        text-transform: uppercase;
-    }
-    .evidence-core-strip b {
-        color: #172126;
-        font-size: 1.7rem;
-        line-height: 1.05;
-    }
-    .evidence-core-strip i {
-        color: #536064;
-        font-size: 0.95rem;
-        font-weight: 850;
-    }
-    .flow-spine {
-        grid-template-columns: auto 1fr auto 1fr auto 1fr auto 1fr auto;
-        margin: 0.7rem 0 0.9rem 0;
-        padding: 0.7rem 0.9rem;
-        border-radius: 999px;
-        background: #172126;
-    }
-    .flow-spine span {
-        background: #ffffff;
-        color: #17364a;
-        padding: 0.25rem 0.55rem;
-        font-size: 0.82rem;
-    }
-    .map-midline {
-        grid-template-columns: repeat(5, 1fr);
-        margin: 0.7rem 0;
-    }
-    .map-midline span {
-        background: #e8f1f8;
-        color: #236b9a;
-        padding: 0.35rem 0.4rem;
-        font-size: 0.78rem;
-    }
-    .visual-node {
-        position: relative;
-        min-height: 5.7rem;
-        border-radius: 0.75rem;
-        padding: 0.8rem;
-        margin-bottom: 0.35rem;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.48);
-        box-shadow: 0 14px 28px rgba(23, 33, 38, 0.1);
-    }
-    .visual-node:before {
-        content: "";
-        position: absolute;
-        right: -2.1rem;
-        top: -2.1rem;
-        width: 6.6rem;
-        height: 6.6rem;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.2);
-    }
-    .visual-node:after {
-        content: "";
-        position: absolute;
-        left: 0.8rem;
-        right: 0.8rem;
-        bottom: 0.7rem;
-        height: 0.35rem;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.5);
-    }
-    .visual-mark {
-        position: relative;
-        display: inline-grid;
-        place-items: center;
-        width: 3.1rem;
-        height: 3.1rem;
-        border-radius: 0.9rem;
-        background: rgba(255,255,255,0.92);
-        color: #172126;
-        font-size: 1.2rem;
-        font-weight: 950;
-        box-shadow: 0 8px 18px rgba(23, 33, 38, 0.12);
-    }
-    .visual-lines {
-        position: absolute;
-        right: 0.85rem;
-        top: 1rem;
-        display: grid;
-        gap: 0.28rem;
-        width: 4.6rem;
-    }
-    .visual-lines i {
-        display: block;
-        height: 0.42rem;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.78);
-    }
-    .visual-lines i:nth-child(2) {
-        width: 75%;
-    }
-    .visual-lines i:nth-child(3) {
-        width: 48%;
-    }
-    .visual-node span {
-        position: absolute;
-        left: 0.85rem;
-        bottom: 1.25rem;
-        color: rgba(255,255,255,0.92);
-        font-size: 0.78rem;
-        font-weight: 950;
-        letter-spacing: 0;
-    }
-    .visual-node.material { background: linear-gradient(135deg, #236b9a 0%, #123d61 100%); }
-    .visual-node.development { background: linear-gradient(135deg, #2f9b77 0%, #176f58 100%); }
-    .visual-node.process { background: linear-gradient(135deg, #f39b2f 0%, #d97825 100%); }
-    .visual-node.quality { background: linear-gradient(135deg, #1b8b69 0%, #0d5d49 100%); }
-    .visual-node.stability { background: linear-gradient(135deg, #9a6a1f 0%, #df9c3c 100%); }
-    .visual-node.safety { background: linear-gradient(135deg, #174b78 0%, #3f67a5 100%); }
-    .visual-node.docs { background: linear-gradient(135deg, #1f6f55 0%, #2f8e73 100%); }
-    .visual-node.lifecycle { background: linear-gradient(135deg, #9a5877 0%, #d97825 100%); }
-    .visual-node.modern { background: linear-gradient(135deg, #5b3476 0%, #236b9a 100%); }
-    .mini-map-card, .ontology-node-card {
-        border: 1px solid #cddce3;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
-        border-radius: 0.7rem;
-        padding: 0.9rem 0.95rem;
-        min-height: 6.2rem;
-        box-shadow: 0 12px 24px rgba(23, 33, 38, 0.07);
-        margin-bottom: 0.35rem;
-    }
-    .mini-map-card b {
-        display: block;
-        color: #172126;
-        font-size: 1rem;
-        line-height: 1.15;
-    }
-    .mini-map-card span {
-        display: inline-block;
-        margin-top: 0.55rem;
-        color: #1f6f55;
-        font-size: 0.82rem;
-        font-weight: 900;
-    }
-    .ontology-node-card {
-        min-height: 9.2rem;
-        position: relative;
-        overflow: hidden;
-    }
-    .ontology-node-card:before {
-        content: "";
-        position: absolute;
-        right: -2.8rem;
-        top: -2.8rem;
-        width: 7rem;
-        height: 7rem;
-        border-radius: 50%;
-        background: rgba(46, 113, 94, 0.11);
-    }
-    .ontology-node-card .node-number {
-        display: inline-grid;
-        place-items: center;
-        width: 2.4rem;
-        height: 2.4rem;
-        border-radius: 50%;
-        background: #172126;
-        color: white;
-        font-weight: 950;
-        margin-bottom: 0.55rem;
-    }
-    .ontology-node-card h3 {
-        margin: 0;
-        font-size: 1.02rem;
-        color: #172126;
-    }
-    .ontology-node-card p {
-        margin: 0.5rem 0 0.45rem 0;
-        color: #536064;
-        font-size: 0.86rem;
-        line-height: 1.25;
-    }
-    .ontology-node-card span {
-        display: inline-block;
-        color: #236b9a;
-        background: #e8f1f8;
-        border-radius: 999px;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 900;
-    }
-    .hero {
-        background: radial-gradient(circle at 15% 15%, #d9eadf 0, transparent 24%),
-                    linear-gradient(135deg, #172126 0%, #20363a 58%, #2e715e 100%);
-        color: white;
-        padding: 2rem 2.2rem;
-        margin-bottom: 1.25rem;
-        border: 1px solid #22383a;
-        border-radius: 0.7rem;
-    }
-    .hero h1 {
-        font-size: 3rem;
-        line-height: 1.08;
-        margin-bottom: 0.55rem;
-        color: white;
-    }
-    .hero p {
-        color: #d6e4df;
-        font-size: 1.15rem;
-        max-width: 960px;
-    }
-    .visual-map {
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
-        border-radius: 0.7rem;
-        overflow: hidden;
-        margin: 0.6rem 0 1rem 0;
-        box-shadow: 0 18px 45px rgba(23, 33, 38, 0.08);
-    }
-    .visual-map-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 2rem;
-        padding: 1.2rem 1.35rem 0.2rem 1.35rem;
-    }
-    .visual-map-head h2 {
-        margin: 0;
-        font-size: 1.45rem;
-    }
-    .visual-map-head p {
-        color: #687477;
-        font-size: 0.95rem;
-        max-width: 430px;
-        margin: 0.25rem 0 0 0;
-    }
-    .eyebrow {
-        display: inline-block;
-        color: #1f6f55;
-        background: #e7f2ec;
-        padding: 0.22rem 0.5rem;
-        border-radius: 0.3rem;
-        font-size: 0.78rem;
-        font-weight: 800;
-        margin-bottom: 0.45rem;
-        text-transform: uppercase;
-    }
-    .visual-map svg {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-    div.stButton > button {
-        width: 100%;
-        min-height: 8.4rem;
-        border-radius: 0.7rem;
-        border: 1px solid #cddce3;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fbfc 100%);
-        color: #1d2528;
-        text-align: left;
-        padding: 1rem 0.95rem;
-        line-height: 1.22;
-        font-weight: 900;
-        white-space: pre-wrap;
-        box-shadow: 0 12px 24px rgba(23, 33, 38, 0.07);
-    }
-    div.stButton > button:hover {
-        border-color: #2e715e;
-        color: #1f6f55;
-        background: linear-gradient(135deg, #eef6f1 0%, #ffffff 100%);
-        transform: translateY(-2px);
-    }
-    .stage-caption {
-        color: #687477;
-        font-size: 0.8rem;
-        margin-top: -0.5rem;
-        min-height: 2.4rem;
-    }
-    .stage-guide {
-        display: inline-block;
-        color: #1f6f55;
-        background: #e7f2ec;
-        font-size: 0.75rem;
-        font-weight: 800;
-        padding: 0.18rem 0.42rem;
-        border-radius: 0.25rem;
-        margin-top: 0.15rem;
-    }
-    .selected-strip {
-        background: linear-gradient(135deg, #172126 0%, #23373b 100%);
-        color: white;
-        padding: 1rem 1.15rem;
-        margin: 0.9rem 0 1.1rem 0;
-        border-radius: 0.55rem;
-    }
-    .selected-strip b {
-        color: #d8eadf;
-    }
-    .panel {
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
-        padding: 1rem 1.05rem;
-        margin-bottom: 1rem;
-    }
-    .panel h3 {
-        margin-top: 0;
-        font-size: 1.25rem;
-    }
-    .rationale {
-        background: linear-gradient(135deg, #172126 0%, #21383a 100%);
-        color: white;
-        padding: 1rem 1.2rem;
-        margin: 0.8rem 0 1rem 0;
-        border-radius: 0.55rem;
-    }
-    .rationale h3 {
-        color: white;
-        margin: 0 0 0.5rem 0;
-        font-size: 1rem;
-        text-transform: uppercase;
-    }
-    .chip {
-        display: inline-block;
-        background: #e7f2ec;
-        color: #1f6f55;
-        padding: 0.27rem 0.55rem;
-        margin: 0.12rem;
-        font-size: 0.82rem;
-        font-weight: 700;
-        border-radius: 0.35rem;
-    }
-    .ctd {
-        display: inline-block;
-        background: #e8f1f8;
-        color: #236b9a;
-        padding: 0.27rem 0.55rem;
-        margin: 0.12rem;
-        font-size: 0.82rem;
-        font-weight: 700;
-        border-radius: 0.35rem;
-    }
-    .small {
-        color: #687477;
-        font-size: 0.9rem;
-    }
-    .info-card, .list-card {
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
-        padding: 1rem 1.05rem;
-        margin-bottom: 1rem;
-        min-height: 9rem;
-        border-radius: 0.55rem;
-        box-shadow: 0 10px 22px rgba(23, 33, 38, 0.05);
-    }
-    .info-card h3, .list-card h3 {
-        margin: 0 0 0.55rem 0;
-        font-size: 1.05rem;
-    }
-    .info-card p {
-        color: #536064;
-        line-height: 1.45;
-        margin-bottom: 0;
-    }
-    .card-footer {
-        color: #1f6f55;
-        background: #e7f2ec;
-        padding: 0.35rem 0.5rem;
-        margin-top: 0.7rem;
-        font-size: 0.82rem;
-        font-weight: 800;
-    }
-    .list-card ul {
-        margin: 0.35rem 0 0 1.1rem;
-        padding: 0;
-    }
-    .list-card li {
-        margin-bottom: 0.45rem;
-        color: #536064;
-        line-height: 1.35;
-    }
-    .guideline-card {
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
-        padding: 0.9rem 1rem;
-        margin-bottom: 0.75rem;
-        border-radius: 0.55rem;
-    }
-    .guideline-card h4 {
-        margin: 0 0 0.35rem 0;
-        font-size: 1rem;
-    }
-    .guideline-card p {
-        color: #536064;
-        margin: 0.2rem 0;
-        line-height: 1.35;
-    }
-    .evidence-panel {
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
-        padding: 1rem;
-        border-radius: 0.55rem;
-        margin-bottom: 1rem;
-    }
-    .relationship-box {
-        border: 1px solid #d9d1c1;
-        background: #f8f4ea;
-        padding: 1rem;
-        border-radius: 0.55rem;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        color: #253134;
-        overflow-wrap: anywhere;
-    }
-    .finder-panel {
-        border: 1px solid #cddce3;
-        background: #f8fbfc;
-        padding: 1rem 1.05rem;
-        margin: 0.8rem 0 1rem 0;
-        border-radius: 0.65rem;
-    }
-    .finder-panel h3 {
-        margin: 0 0 0.35rem 0;
-        font-size: 1.15rem;
-    }
-    .finder-panel p {
-        margin: 0 0 0.65rem 0;
-        color: #536064;
-        font-size: 0.95rem;
-    }
-    .result-card {
-        border: 1px solid #d9d1c1;
-        background: #fffdf8;
-        padding: 0.8rem 0.9rem;
-        border-radius: 0.55rem;
-        margin-bottom: 0.65rem;
-    }
-    .result-card b {
-        color: #172126;
-    }
-    .result-card span {
-        display: inline-block;
-        margin-top: 0.35rem;
-        color: #1f6f55;
-        font-size: 0.82rem;
-        font-weight: 800;
-    }
-    .case-panel {
-        border: 1px solid #c9dce6;
-        background: linear-gradient(135deg, #f8fbfc 0%, #eef6f1 100%);
-        padding: 1rem 1.1rem;
-        margin: 0.8rem 0 1rem 0;
-        border-radius: 0.65rem;
-    }
-    .case-panel h3 {
-        margin: 0 0 0.45rem 0;
-        font-size: 1.15rem;
-    }
-    .case-panel p {
-        color: #536064;
-        margin: 0.3rem 0;
-        line-height: 1.42;
-    }
-    .case-signal {
-        display: inline-block;
-        margin: 0.18rem;
-        padding: 0.28rem 0.55rem;
-        border-radius: 999px;
-        background: #e7f2ec;
-        color: #1f6f55;
-        font-size: 0.8rem;
-        font-weight: 800;
-    }
-    .playbook-panel {
-        border: 1px solid #b8d1df;
-        background: linear-gradient(135deg, #edf6fb 0%, #f7fbfc 46%, #eef6f1 100%);
-        padding: 1rem 1.1rem;
-        margin: 0.8rem 0 1rem 0;
-        border-radius: 0.65rem;
-    }
-    .playbook-panel h3 {
-        margin: 0 0 0.3rem 0;
-        font-size: 1.2rem;
-    }
-    .playbook-panel p {
-        color: #536064;
-        margin: 0.25rem 0 0.7rem 0;
-        line-height: 1.42;
-    }
-    .playbook-chip {
-        display: inline-block;
-        background: #e8f1f8;
-        color: #236b9a;
-        padding: 0.28rem 0.55rem;
-        margin: 0.15rem;
-        font-size: 0.8rem;
-        font-weight: 800;
-        border-radius: 999px;
-    }
-    .landing-note {
-        color: #536064;
-        font-size: 0.95rem;
-        font-weight: 800;
-        margin: 0.85rem 0 0.45rem 0;
-    }
-    </style>
-    """,
+<div class="kicker">What We Do</div>
+<div class="big-question">Prediction alone is not enough.</div>
+<p class="body-large">
+AI toxicity prediction is becoming more important in pharmaceutical development,
+but the business value comes from interpretation. We help teams understand whether
+a signal is scientifically credible, whether it creates regulatory risk, and what
+evidence should come next.
+</p>
+""",
+    unsafe_allow_html=True,
+)
+
+st.markdown('<div class="service-grid">', unsafe_allow_html=True)
+col_s1, col_s2, col_s3 = st.columns(3)
+with col_s1:
+    st.markdown("""
+    <div class="evidence-node-premium">
+        <div class="node-number-premium">01</div>
+        <h3 style="color:#123d61; font-family:'Outfit';">In Silico Assessment</h3>
+        <p style="color:#536064; font-size:0.9rem;">API, 불순물, 분해산물에 대한 사전 독성 스크리닝 및 규제 대응 전략 수립.</p>
+    </div>
+    """, unsafe_allow_html=True)
+with col_s2:
+    st.markdown("""
+    <div class="evidence-node-premium">
+        <div class="node-number-premium">02</div>
+        <h3 style="color:#123d61; font-family:'Outfit';">ICH M7 Compliance</h3>
+        <p style="color:#536064; font-size:0.9rem;">유전독성 불순물의 분류, 노출 허용량 계산 및 ICH M7 가이드라인 기반 정당성 입증.</p>
+    </div>
+    """, unsafe_allow_html=True)
+with col_s3:
+    st.markdown("""
+    <div class="evidence-node-premium">
+        <div class="node-number-premium">03</div>
+        <h3 style="color:#123d61; font-family:'Outfit';">Gap Analysis</h3>
+        <p style="color:#536064; font-size:0.9rem;">과학적 불확실성을 IND, NDA 제출을 위한 구체적 데이터 갭 분석 및 실행 전략으로 전환.</p>
+    </div>
+    """, unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+
+st.markdown(
+    """
+<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(18,61,97,0.05); padding:2rem; border-radius:1rem; border:1px solid rgba(18,61,97,0.1); margin:2rem 0;">
+    <div style="text-align:center; flex:1;">
+        <div style="width:30px; height:30px; background:var(--primary-blue); color:white; border-radius:50%; margin:0 auto 0.5rem; display:flex; align-items:center; justify-content:center; font-weight:900;">1</div>
+        <b style="color:var(--primary-blue); font-size:0.8rem;">INPUT</b>
+        <p style="font-size:0.75rem; color:#666; margin:0;">SMILES & Info</p>
+    </div>
+    <div style="flex:0.5; height:2px; background:linear-gradient(90deg, var(--primary-blue), var(--accent-green));"></div>
+    <div style="text-align:center; flex:1;">
+        <div style="width:30px; height:30px; background:var(--accent-green); color:white; border-radius:50%; margin:0 auto 0.5rem; display:flex; align-items:center; justify-content:center; font-weight:900;">2</div>
+        <b style="color:var(--accent-green); font-size:0.8rem;">SCREEN</b>
+        <p style="font-size:0.75rem; color:#666; margin:0;">QSAR & Ref</p>
+    </div>
+    <div style="flex:0.5; height:2px; background:linear-gradient(90deg, var(--accent-green), var(--accent-gold));"></div>
+    <div style="text-align:center; flex:1;">
+        <div style="width:30px; height:30px; background:var(--accent-gold); color:white; border-radius:50%; margin:0 auto 0.5rem; display:flex; align-items:center; justify-content:center; font-weight:900;">3</div>
+        <b style="color:var(--accent-gold); font-size:0.8rem;">INTERPRET</b>
+        <p style="font-size:0.75rem; color:#666; margin:0;">Tox Concern</p>
+    </div>
+    <div style="flex:0.5; height:2px; background:linear-gradient(90deg, var(--accent-gold), var(--primary-blue));"></div>
+    <div style="text-align:center; flex:1;">
+        <div style="width:30px; height:30px; background:var(--primary-blue); color:white; border-radius:50%; margin:0 auto 0.5rem; display:flex; align-items:center; justify-content:center; font-weight:900;">4</div>
+        <b style="color:var(--primary-blue); font-size:0.8rem;">DECIDE</b>
+        <p style="font-size:0.75rem; color:#666; margin:0;">Regulatory Action</p>
+    </div>
+</div>
+""",
     unsafe_allow_html=True,
 )
 
 
-query_category = st.query_params.get("category")
-query_item = st.query_params.get("item")
-query_playbook = st.query_params.get("playbook")
-if query_category in ONTOLOGY:
-    st.session_state.category = query_category
+st.markdown('<div class="assessment">', unsafe_allow_html=True)
+st.markdown("## Start Preliminary Toxicity Assessment")
+st.caption("Demo only. Final regulatory decisions require qualified expert review.")
+
+compound = st.text_input("Compound Name", key="compound_name")
+smiles = st.text_input("SMILES", key="smiles")
+
+reference_rows = get_impurity_references(compound)
+if compound.strip():
+    st.markdown(f"### Known Impurity Reference for {compound.strip()}")
+    st.caption(
+        "The searched compound is checked against the current demo reference library. "
+        "USP/EP monographs should be used as the primary source when available. "
+        "If no verified entry is loaded, the table shows a search/verification plan."
+    )
+    st.table(reference_rows)
 else:
-    render_landing_navigation()
-    st.stop()
+    st.info("Enter a compound name to check compound-specific impurity reference information.")
 
-
-if st.button("Back to Ontology Map"):
-    for key in list(st.query_params.keys()):
-        del st.query_params[key]
-    st.rerun()
-
-with st.sidebar:
-    st.header("Ontology Menu")
-    st.subheader("Situation Finder")
-    for playbook_key, playbook in SITUATION_PLAYBOOKS.items():
-        if st.button(playbook["label"], key=f"side_playbook_{playbook_key}"):
-            open_playbook(playbook_key)
-    st.divider()
-    category = st.radio(
-        "Development process",
-        list(ONTOLOGY.keys()),
-        index=list(ONTOLOGY.keys()).index(st.session_state.category),
-        label_visibility="collapsed",
-    )
-    st.session_state.category = category
-    st.query_params["category"] = category
-    available_items = list(ONTOLOGY[category]["items"].keys())
-    item_index = available_items.index(query_item) if query_item in available_items else 0
-    item = st.selectbox("Ontology item", available_items, index=item_index)
-    st.query_params["item"] = item
-    st.divider()
-    st.caption("Use the menu above as the ontology tree. The selected item opens its detail page.")
-
-
-category_data = ONTOLOGY[category]
-item_data = category_data["items"][item]
-active_playbook = SITUATION_PLAYBOOKS.get(query_playbook)
-
-st.markdown(
-    f"""
-    <div class="finder-panel">
-        <h3>{category} Items</h3>
-        <p>Select a specific ontology item inside this development domain.</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
+material_type = st.selectbox(
+    "Material Type",
+    ["API", "Excipient", "Impurity", "Degradation Product"],
+    key="material_type",
 )
-item_columns = st.columns(min(3, len(available_items)))
-for index, available_item in enumerate(available_items):
-    available_data = category_data["items"][available_item]
-    with item_columns[index % len(item_columns)]:
-        if st.button(
-            f"{available_item}\n\n{' / '.join(available_data['guidelines'][:3])}",
-            key=f"domain_item_{category}_{available_item}",
-            help=available_data["definition"],
-        ):
-            st.query_params["category"] = category
-            st.query_params["item"] = available_item
-            st.rerun()
 
-st.markdown(
+purpose = st.selectbox(
+    "Assessment Purpose",
+    [
+        "Early R&D",
+        "IND",
+        "NDA (505(b)(1) - New Drug)",
+        "NDA (505(b)(2) - Repurposed/Modified)",
+        "ANDA (Generic)",
+        "Investor Due Diligence",
+    ],
+    key="purpose",
+)
+
+st.markdown("### Related Substance / Impurity Specification Input")
+st.caption(
+    "Directly edit the table below to input your analytical lab results ('Observed (%)') "
+    "and compare them against your proposed or compendial 'Specification (%)'. "
+    "You can add or remove rows directly from the table."
+)
+
+default_impurities = pd.DataFrame([
+    {"Impurity Code": "Impurity A", "Chemical Name": "4-Aminophenol", "Origin": "Degradation product", "Observed (%)": 0.08, "Specification (%)": 0.10, "Concern": "Genotoxic alert not identified"},
+    {"Impurity Code": "Impurity B", "Chemical Name": "Route-specific starting material", "Origin": "Unreacted starting material", "Observed (%)": 0.16, "Specification (%)": 0.15, "Concern": "Requires qualification review"},
+    {"Impurity Code": "Impurity C", "Chemical Name": "Supplier-related raw material impurity", "Origin": "Raw material", "Observed (%)": 0.04, "Specification (%)": 0.05, "Concern": "Supplier-related carryover"},
+    {"Impurity Code": "Impurity D", "Chemical Name": "Unknown related substance", "Origin": "Unknown impurity", "Observed (%)": 0.06, "Specification (%)": 0.05, "Concern": "Structure identification needed"}
+])
+
+edited_df = st.data_editor(default_impurities, num_rows="dynamic", use_container_width=True, key="impurity_editor")
+
+if st.button("Run Preliminary Assessment", key="run_assessment"):
+    render_premium_loader("AI CORE: INITIALIZING TOXICITY INTERPRETATION")
+    import time
+    time.sleep(1.8)
+    st.markdown('<div class="report">', unsafe_allow_html=True)
+    st.markdown("### Preliminary Regulatory Toxicology Report")
+
+    impurity_rows = assess_impurities(edited_df)
+
+    # 1. KPI Metrics — driven by actual input data
+    total_count = len(impurity_rows) if impurity_rows else 0
+    above_spec_count = len([r for r in impurity_rows if r['Status'] == 'Above specification'])
+    within_spec_count = len([r for r in impurity_rows if r['Status'] == 'Within specification'])
+    review_count = len([r for r in impurity_rows if r['Status'] == 'Review needed'])
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Impurities Entered", str(total_count))
+    col2.metric("Within Specification", str(within_spec_count), None, delta_color="normal")
+    col3.metric("Above Specification ⚠️", str(above_spec_count), f"+{above_spec_count}" if above_spec_count > 0 else None, delta_color="inverse")
+    col4.metric("Review Needed", str(review_count))
+
+    st.markdown("---")
+
+    # 2. Charts — all driven by user input
+    if impurity_rows:
+        col_chart1, col_chart2 = st.columns(2)
+
+        with col_chart1:
+            st.markdown("#### Observed vs. Specification (ICH Q3A/B Threshold)")
+            obs_vals = []
+            spec_vals = []
+            labels = []
+            for r in impurity_rows:
+                try:
+                    obs_vals.append(float(r["Observed (%)"]))
+                    spec_vals.append(float(r["Specification (%)"]))
+                    labels.append(r["Impurity Code"])
+                except (ValueError, TypeError):
+                    continue
+            fig = go.Figure()
+            fig.add_trace(go.Bar(x=labels, y=obs_vals, name="Observed (%)", marker_color="#0070c0"))
+            fig.add_trace(go.Scatter(x=labels, y=spec_vals, name="Specification Limit", mode="lines+markers", line=dict(color="#bb3e33", dash="dash", width=2)))
+            # ICH Q3A identification threshold for API
+            if material_type == "API":
+                fig.add_hline(y=0.10, line_dash="dot", line_color="orange", annotation_text="ICH Q3A ID Threshold (0.10%)")
+                fig.add_hline(y=0.15, line_dash="dot", line_color="red", annotation_text="ICH Q3A Qual. Threshold (0.15%)")
+            fig.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=340, legend=dict(orientation="h", y=-0.2))
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col_chart2:
+            st.markdown("#### Margin of Safety (Observed / Specification)")
+            margin_data = []
+            for r in impurity_rows:
+                try:
+                    obs = float(r["Observed (%)"])
+                    spec = float(r["Specification (%)"])
+                    pct = round((obs / spec) * 100, 1) if spec > 0 else 0
+                    margin_data.append({"Impurity": r["Impurity Code"], "Usage (%)": pct})
+                except (ValueError, TypeError):
+                    continue
+            if margin_data:
+                df_margin = pd.DataFrame(margin_data)
+                colors = ["#b71c1c" if v > 100 else "#f57c00" if v > 80 else "#1b5e20" for v in df_margin["Usage (%)"]]
+                fig2 = go.Figure(go.Bar(x=df_margin["Impurity"], y=df_margin["Usage (%)"], marker_color=colors, text=[f"{v}%" for v in df_margin["Usage (%)"]], textposition="outside"))
+                fig2.add_hline(y=100, line_dash="dash", line_color="red", annotation_text="Specification Limit (100%)")
+                fig2.add_hline(y=80, line_dash="dot", line_color="orange", annotation_text="Warning Zone (80%)")
+                fig2.update_layout(yaxis_title="% of Specification Used", margin=dict(l=20, r=20, t=30, b=20), height=340)
+                st.plotly_chart(fig2, use_container_width=True)
+
+        # Row 2: Origin distribution + Status summary
+        col_chart3, col_chart4 = st.columns(2)
+        with col_chart3:
+            st.markdown("#### Impurity Origin Distribution")
+            origin_counts = {}
+            for r in impurity_rows:
+                o = r["Origin"]
+                origin_counts[o] = origin_counts.get(o, 0) + 1
+            fig3 = go.Figure(go.Pie(labels=list(origin_counts.keys()), values=list(origin_counts.values()), hole=0.45, marker=dict(colors=["#0070c0", "#bb3e33", "#f0ad4e", "#5cb85c", "#6c757d"])))
+            fig3.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=300)
+            st.plotly_chart(fig3, use_container_width=True)
+
+        with col_chart4:
+            st.markdown("#### Compliance Status Summary")
+            status_map = {"Within specification": within_spec_count, "Above specification": above_spec_count, "Review needed": review_count}
+            fig4 = go.Figure(go.Bar(x=list(status_map.keys()), y=list(status_map.values()), marker_color=["#1b5e20", "#b71c1c", "#f57c00"], text=list(status_map.values()), textposition="outside"))
+            fig4.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=300, yaxis_title="Count")
+            st.plotly_chart(fig4, use_container_width=True)
+
+    st.markdown("---")
+
+    st.write(f"**Compound:** {compound if compound else 'Not provided'}")
+    st.write(f"**SMILES:** {smiles if smiles else 'Not provided'}")
+    st.write(f"**Material Type:** {material_type}")
+    st.write(f"**Assessment Purpose:** {purpose}")
+
+    st.markdown("#### Predicted Toxicity Concerns")
+    st.write(
+        """
+    - Mutagenicity: Low preliminary concern unless structural alerts are identified
+    - Genotoxicity: Low preliminary concern; confirm with QSAR evidence package
+    - Carcinogenicity: Exposure-dependent concern requiring longer-term context
+    - Hepatotoxicity: Further review recommended based on class and exposure
+    - Reproductive toxicity: Data gap remains unless supported by analog evidence
     """
-    <div class="finder-panel">
-        <h3>Quick Finder</h3>
-        <p>Search the ontology while developing a drug: CQA, DMF, impurity, analytical method, shelf life, QRM, PQ/CMC, NAMs, AI credibility.</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-search_term = st.text_input(
-    "Find ontology item",
-    placeholder="Type a need, evidence item, CTD section, or guideline...",
-    label_visibility="collapsed",
-)
-if search_term:
-    results = search_ontology(search_term)[:6]
-    if results:
-        result_columns = st.columns(2)
-        for index, (_, result_category, result_item, result_data) in enumerate(results):
-            with result_columns[index % 2]:
-                st.markdown(
-                    f"""
-                    <div class="result-card">
-                        <b>{result_item}</b><br>
-                        <span>{result_category} · {' / '.join(result_data["guidelines"][:3])}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                if st.button("Open", key=f"open_result_{index}_{result_category}_{result_item}"):
-                    st.query_params["category"] = result_category
-                    st.query_params["item"] = result_item
-                    st.rerun()
+    )
+
+    st.markdown("#### Regulatory Interpretation")
+    if purpose == "NDA (505(b)(2) - Repurposed/Modified)":
+        st.success(
+            """
+        **505(b)(2) Pathway Analysis:** 
+        As the API is already known, full systemic toxicity data can likely rely on the Reference Listed Drug (RLD) or literature. 
+        However, the regulatory focus must shift to strictly qualifying **new impurities, novel excipients, or degradation products** arising from your new formulation or new route of administration. 
+        Focus your efforts on ICH M7 justification for any new peaks and bridging local toxicity data.
+        """
+        )
     else:
-        st.info("No ontology item matched that search term.")
-
-if active_playbook:
-    st.markdown(
-        f"""
-        <div class="playbook-panel">
-            <h3>{active_playbook["label"]}</h3>
-            <p>{active_playbook["lead"]}</p>
-            <p><b>Decision:</b> {active_playbook["decision"]}</p>
-            {" ".join([f"<span class='playbook-chip'>{guide}</span>" for guide in active_playbook["guidelines"]])}
-            {" ".join([f"<span class='playbook-chip'>{section}</span>" for section in active_playbook["ctd"]])}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    playbook_check_col, playbook_evidence_col = st.columns(2)
-    with playbook_check_col:
-        render_list_card("Manufacturing Checklist", active_playbook["checklist"])
-    with playbook_evidence_col:
-        render_list_card("Evidence Basket", active_playbook["evidence"])
-
-st.markdown(
-    f"""
-    <div class="case-panel">
-        <h3>Process Case Lens: {CASE_STUDY["title"]}</h3>
-        <p>{CASE_STUDY["category_links"].get(category, CASE_STUDY["summary"])}</p>
-        <p><b>Decision lens:</b> {CASE_STUDY["decision"]}</p>
-        {" ".join([f"<span class='case-signal'>{signal}</span>" for signal in CASE_STUDY["signals"]])}
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-primary_guides = " / ".join(item_data["guidelines"][:3])
-st.markdown(
-    f"""
-    <div class="selected-strip">
-        <b>{category}</b> · {category_data["description"]}<br>
-        Selected item: <b>{item}</b> · Primary references: <b>{primary_guides}</b>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.markdown(f"## {item}")
-render_card("Definition", item_data["definition"], "Ontology item", "green")
-
-st.markdown(
-    f"""
-    <div class="rationale">
-        <h3>Guideline rationale</h3>
-        <p>{item_data["rationale"]}</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-summary_col, evidence_col = st.columns([1.2, 1])
-
-with summary_col:
-    render_list_card("Key Data Elements", item_data["data"][:4])
-    with st.expander("See detailed information"):
-        for detail in item_data["details"]:
-            st.markdown(f"- {detail}")
-        if len(item_data["data"]) > 4:
-            st.markdown("**Additional data elements**")
-            for datum in item_data["data"][4:]:
-                st.markdown(f"- {datum}")
- 
-with evidence_col:
-    st.markdown(
-        f"""
-        <div class="evidence-panel">
-            <h3>CTD / Evidence Location</h3>
-            {" ".join([f"<span class='ctd'>{location}</span>" for location in item_data["ctd"]])}
-            <h3 style="margin-top:1rem;">Related Guidelines</h3>
-            {" ".join([guideline_chip(guideline) for guideline in item_data["guidelines"]])}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-st.markdown("### Guideline Details")
-guide_cols = st.columns(2)
-for index, guideline_name in enumerate(item_data["guidelines"]):
-    guideline = GUIDELINES[guideline_name]
-    with guide_cols[index % 2]:
-        st.markdown(
-            f"""
-            <div class="guideline-card">
-                <h4>{guideline_name}: {guideline["title"]}</h4>
-                <p><b>Scope:</b> {guideline["scope"]}</p>
-                <p><b>Why it applies:</b> {guideline["rationale"]}</p>
-                <p><a href="{guideline["url"]}" target="_blank">Open reference</a></p>
-            </div>
-            """,
-            unsafe_allow_html=True,
+        st.write(
+            """
+        The current signal should be interpreted through intended use, material classification,
+        exposure level, impurity profile, and the credibility of the supporting model or NAMs evidence.
+        """
         )
 
+    if impurity_rows:
+        st.markdown("#### Impurities Comparison: Observed vs. Specification Limits")
+        st.caption(
+            "Specification basis in this demo: proposed internal limit (% area or w/w). "
+            "For real use, align the basis with approved specifications, stability data, "
+            "ICH Q3A/Q3B thresholds, ICH M7 acceptable intake logic, or product-specific justification."
+        )
+        
+        # Enhanced Data Table using Pandas
+        df_impurities = pd.DataFrame(impurity_rows)
+        def highlight_status(val):
+            if val == 'Above specification':
+                return 'background-color: #ffebee; color: #b71c1c; font-weight: bold'
+            elif val == 'Within specification':
+                return 'background-color: #e8f5e9; color: #1b5e20; font-weight: bold'
+            return ''
+        
+        styled_df = df_impurities.style.map(highlight_status, subset=['Status'])
+        st.dataframe(styled_df, use_container_width=True)
 
-st.markdown("### Ontology Relationship")
-graph_tab, text_tab = st.tabs(["Interactive Graph", "Text View"])
+        above_spec = [row for row in impurity_rows if row["Status"] == "Above specification"]
+        review_needed = [row for row in impurity_rows if row["Status"] == "Review needed"]
 
-with graph_tab:
-    render_ontology_graph(item)
+        if above_spec:
+            st.error(
+                "One or more impurities are above the proposed specification. "
+                "A toxicological qualification and regulatory impact assessment should be prepared."
+            )
+        elif review_needed:
+            st.warning(
+                "Some impurity rows need review because the observed result or specification is not numeric."
+            )
+        else:
+            st.success(
+                "All listed impurities are within the proposed specification based on the values provided."
+            )
 
-with text_tab:
-    relationship_examples = {
-        "Drug Substance / API": "DrugSubstance --hasImpurity--> Impurity --controlledBy--> Specification --testedBy--> AnalyticalMethod",
-        "Drug Product": "DrugProduct --hasCQA--> CQA --controlledBy--> Specification --monitoredBy--> StabilityStudy",
-        "Excipient": "Excipient --hasFunctionalRole--> ExcipientRole --mayAffect--> CQA",
-        "QTPP": "QTPP --definesTargetFor--> DrugProduct --drivesSelectionOf--> CQA",
-        "CQA": "CQA --testedBy--> AnalyticalMethod --validatedBy--> MethodValidation",
-        "CMA / CPP": "CMA/CPP --mayImpact--> CQA --mitigatedBy--> ControlStrategy",
-        "Unit Operations": "UnitOperation --hasParameter--> CPP --affects--> CQA",
-        "Process Validation": "ProcessValidation --verifies--> ManufacturingProcess --supports--> ControlStrategy",
-        "Continuous Manufacturing": "ContinuousProcess --monitoredBy--> PAT --controlledBy--> RealTimeControlStrategy",
-        "Specification": "Specification --contains--> TestItem --hasAcceptanceCriteria--> AcceptanceCriterion",
-        "Analytical Method": "AnalyticalMethod --hasPurpose--> AnalyticalTargetProfile --validatedBy--> ICHQ2Validation",
-        "Impurity Control": "Impurity --hasOrigin--> ProcessOrDegradation --controlledBy--> ControlStrategy",
-        "Stability Study": "StabilityStudy --monitors--> CQA --supports--> ShelfLife",
-        "Shelf Life and Storage": "ShelfLife --supportedBy--> StabilityData --appearsIn--> Labeling",
-        "Nonclinical Evidence": "NonclinicalStudy --supports--> FirstInHumanExposure --summarizedIn--> CTDModule4",
-        "Clinical Evidence": "ClinicalStudy --supports--> BenefitRisk --summarizedIn--> CTDModule5",
-        "CTD Module 3": "QualityEvidence --submittedIn--> CTDModule3 --summarizedIn--> QOS",
-        "DMF / Supplier Evidence": "SupplierEvidence --referencedBy--> Application --authorizedBy--> LOA",
-        "Quality Risk Management": "RiskAssessment --prioritizes--> ControlAction --reviewedBy--> QualitySystem",
-        "Lifecycle Change Management": "Change --impacts--> CQA/CPP/Method/Stability --managedBy--> Q12Strategy",
-        "PQ/CMC Structured Data": "CMCDataElement --mapsTo--> CTDSection --supports--> StructuredReview",
-        "NAMs Evidence": "NAMsModel --hasContextOfUse--> RegulatoryQuestion --integratedBy--> WeightOfEvidence",
-        "AI Credibility": "AIModel --hasContextOfUse--> Decision --hasCredibilityEvidence--> ValidationPackage",
+        st.markdown("#### CTD 3.2.P.5.5 / DMF Justification Narrative Drafts")
+        st.caption("AI-generated regulatory narrative blocks ready for CTD 3.2.P.5.5 insertion or DMF defense. Review and adapt based on actual QSAR outputs.")
+        
+        # Narrative generation and PDF Export Logic
+        pdf_buffer = io.BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        pdf_elements = [Paragraph("CTD 3.2.P.5.5 Regulatory Narrative Drafts", styles['Title']), Spacer(1, 12)]
+        
+        for row in impurity_rows:
+            status = row["Status"]
+            if status == "Review needed":
+                continue
+            
+            code = row["Impurity Code"]
+            name = row["Impurity Chemical Name"]
+            origin = row["Origin"].lower()
+            obs = row["Observed (%)"]
+            spec = row["Specification (%)"]
+            
+            if status == "Above specification":
+                narrative = (
+                    f"**[{code}] Justification for Specification Limit:**\n\n"
+                    f"The {origin} identified as **{name}** was observed at a maximum level of **{obs}%**, which exceeds the initial proposed specification of **{spec}%**. "
+                    f"To justify the acceptance of this impurity at the observed level, an *in silico* toxicological assessment was conducted in accordance with ICH M7 principles. "
+                    f"Complementary QSAR methodologies (statistical-based and expert rule-based) confirmed the absence of structural alerts for mutagenicity (Class 5). "
+                    f"Furthermore, read-across analysis comparing {name} to structurally similar approved analogs demonstrates that human exposure at the {obs}% limit presents negligible toxicological risk. "
+                    f"Therefore, the specification limit is toxicologically qualified and justified for inclusion in CTD 3.2.P.5.5."
+                )
+                st.warning(narrative)
+                pdf_elements.append(Paragraph(f"<b>[{code}] Justification for Specification Limit:</b>", styles['Heading2']))
+                pdf_elements.append(Spacer(1, 6))
+                pdf_elements.append(Paragraph(narrative.replace('**', '').replace('*', ''), styles['Normal']))
+                pdf_elements.append(Spacer(1, 12))
+                
+            elif status == "Within specification":
+                narrative = (
+                    f"**[{code}] Routine Control Statement:**\n\n"
+                    f"The {origin} **{name}** is routinely monitored. The observed data demonstrates a maximum level of **{obs}%**, "
+                    f"which is consistently well within the established specification limit of **{spec}%**. "
+                    f"Current manufacturing process controls and analytical procedures are fully validated to ensure clearance below the ICH Q3A/Q3B qualification threshold. "
+                    f"No further toxicological qualification is required."
+                )
+                st.info(narrative)
+                pdf_elements.append(Paragraph(f"<b>[{code}] Routine Control Statement:</b>", styles['Heading2']))
+                pdf_elements.append(Spacer(1, 6))
+                pdf_elements.append(Paragraph(narrative.replace('**', '').replace('*', ''), styles['Normal']))
+                pdf_elements.append(Spacer(1, 12))
+                
+        # Generate PDF
+        doc.build(pdf_elements)
+        st.markdown("---")
+        st.download_button(
+            label="📄 Export CTD 3.2.P.5.5 Narrative (PDF)",
+            data=pdf_buffer.getvalue(),
+            file_name="CTD_3_2_P_5_5_Narrative.pdf",
+            mime="application/pdf"
+        )
+    else:
+        st.warning(
+            "No valid impurity rows were detected. Use this format: "
+            "Impurity A, 4-Aminophenol, Degradation product, 0.08, 0.10, Genotoxic alert not identified"
+        )
+
+    st.markdown("#### Recommended Next Steps")
+    if purpose == "NDA (505(b)(2) - Repurposed/Modified)":
+        st.write(
+            """
+        1. **Compare Impurity Profiles:** Map the new impurity profile against the RLD or USP/EP monograph.
+        2. **Isolate Delta:** Identify any *new* impurities or degradation products not present in the original product.
+        3. **In Silico Assessment:** Perform QSAR ICH M7 assessment specifically for the newly identified impurities.
+        4. **Exposure & Local Toxicity:** If the route of administration changed, assess local toxicity and new exposure limits.
+        5. **Bridging Strategy:** Prepare a scientific justification bridging the safety of the RLD to your new formulation.
+        """
+        )
+    else:
+        st.write(
+            """
+        1. Confirm known related substances using USP/EP monographs when available
+        2. Review QSAR outputs from VEGA, OECD QSAR Toolbox, or equivalent tools
+        3. Document model applicability domain and explainability
+        4. Conduct impurity profiling and degradation product assessment
+        5. Prepare ICH M7-based justification if relevant
+        6. Consider confirmatory Ames testing if structural alerts remain unresolved
+        """
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ─── CTD 3.2.P.8 Stability / Shelf-Life Prediction (ICH Q1E) ───
+st.markdown("---")
+st.markdown(
+    """
+<div class="kicker">CTD 3.2.P.8.3</div>
+<div class="big-question">Shelf-Life Prediction (ICH Q1E)</div>
+<p class="body-large">
+Enter your long-term (25°C/60%RH) and accelerated (40°C/75%RH) stability data below.
+ToxiGuard AI performs ICH Q1E linear regression with 95% confidence intervals for both
+conditions and compares the degradation trends to determine shelf-life supportability.
+</p>
+""",
+    unsafe_allow_html=True,
+)
+
+st.caption(
+    "ICH Q1E approach: if accelerated data shows significant change, the shelf life "
+    "cannot be extrapolated beyond the long-term data coverage. If no significant change "
+    "at accelerated conditions, extrapolation up to 2× long-term coverage is supported."
+)
+
+stab_spec = st.number_input(
+    "Specification Limit (%) for this impurity",
+    min_value=0.01, max_value=5.0, value=0.15, step=0.01, key="stab_spec"
+)
+
+
+def run_regression(df_in, max_proj=60):
+    """Run OLS regression and return results dict."""
+    df_c = df_in.dropna()
+    if len(df_c) < 3:
+        return None
+    x = df_c.iloc[:, 0].values.astype(float)
+    y = df_c.iloc[:, 1].values.astype(float)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+    x_pred = np.linspace(0, max(x.max() * 2, max_proj), 300)
+    y_pred = slope * x_pred + intercept
+    n = len(x)
+    x_mean = np.mean(x)
+    se = std_err * np.sqrt(1.0 / n + (x_pred - x_mean) ** 2 / np.sum((x - x_mean) ** 2))
+    t_val = stats.t.ppf(0.95, df=n - 2)
+    y_upper = y_pred + t_val * se
+    cross = np.where(y_upper >= stab_spec)[0]
+    shelf = float(x_pred[cross[0]]) if len(cross) > 0 else None
+    return {
+        "x": x, "y": y, "x_pred": x_pred, "y_pred": y_pred, "y_upper": y_upper,
+        "slope": slope, "intercept": intercept, "r_sq": r_value ** 2,
+        "shelf_life": shelf,
     }
-    st.markdown(
-        f"""
-        <div class="relationship-box">
-            {relationship_examples.get(item, "OntologyItem --alignedWith--> Guideline --supportedBy--> Evidence")}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
-with st.expander("Full ontology index"):
-    full_graph_tab, table_tab = st.tabs(["Full Graph View", "Table View"])
-    with full_graph_tab:
-        render_full_ontology_graph(height=700)
-    with table_tab:
-        st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
+col_long, col_accel = st.columns(2)
+
+with col_long:
+    st.markdown("##### Long-Term (25°C / 60% RH)")
+    lt_default = pd.DataFrame({
+        "Time (months)": [0, 3, 6, 9, 12, 18, 24],
+        "Impurity (%)": [0.02, 0.03, 0.04, 0.06, 0.07, 0.09, 0.11],
+    })
+    lt_df = st.data_editor(lt_default, num_rows="dynamic", use_container_width=True, key="lt_editor")
+
+with col_accel:
+    st.markdown("##### Accelerated (40°C / 75% RH)")
+    ac_default = pd.DataFrame({
+        "Time (months)": [0, 1, 2, 3, 6],
+        "Impurity (%)": [0.02, 0.04, 0.07, 0.11, 0.18],
+    })
+    ac_df = st.data_editor(ac_default, num_rows="dynamic", use_container_width=True, key="ac_editor")
+
+if st.button("Run Shelf-Life Prediction", key="run_stability"):
+    lt_res = run_regression(lt_df, max_proj=60)
+    ac_res = run_regression(ac_df, max_proj=12)
+
+    if lt_res is None:
+        st.error("Long-term data requires at least 3 data points.")
+    else:
+        # KPI row
+        lt_sl_text = f"{lt_res['shelf_life']:.1f} mo" if lt_res['shelf_life'] else "> 60 mo"
+        ac_sl_text = f"{ac_res['shelf_life']:.1f} mo" if ac_res and ac_res['shelf_life'] else ("N/A" if ac_res is None else "> 12 mo")
+        ac_slope_text = f"{ac_res['slope']:.5f}" if ac_res else "N/A"
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Long-Term Shelf Life", lt_sl_text)
+        c2.metric("Long-Term R²", f"{lt_res['r_sq']:.4f}")
+        c3.metric("Accelerated Slope (%/mo)", ac_slope_text)
+        c4.metric("Accel. vs Long-Term Rate", f"{(ac_res['slope'] / lt_res['slope']):.1f}×" if ac_res and lt_res['slope'] != 0 else "N/A")
+
+        # Charts side by side
+        ch1, ch2 = st.columns(2)
+        with ch1:
+            st.markdown("#### Long-Term (25°C / 60% RH)")
+            fig_lt = go.Figure()
+            fig_lt.add_trace(go.Scatter(x=lt_res["x"], y=lt_res["y"], mode="markers", name="Observed", marker=dict(size=9, color="#0070c0")))
+            fig_lt.add_trace(go.Scatter(x=lt_res["x_pred"], y=lt_res["y_pred"], mode="lines", name="Regression", line=dict(color="#002060")))
+            fig_lt.add_trace(go.Scatter(x=lt_res["x_pred"], y=lt_res["y_upper"], mode="lines", name="95% UCI", line=dict(color="#f57c00", dash="dash")))
+            fig_lt.add_hline(y=stab_spec, line_dash="dash", line_color="red", annotation_text=f"Spec ({stab_spec}%)")
+            if lt_res["shelf_life"]:
+                fig_lt.add_vline(x=lt_res["shelf_life"], line_dash="dot", line_color="green", annotation_text=f"{lt_res['shelf_life']:.1f}mo")
+            fig_lt.update_layout(xaxis_title="Time (months)", yaxis_title="Impurity (%)", height=380, margin=dict(l=20, r=20, t=30, b=20), legend=dict(orientation="h", y=-0.25))
+            st.plotly_chart(fig_lt, use_container_width=True)
+
+        with ch2:
+            st.markdown("#### Accelerated (40°C / 75% RH)")
+            if ac_res:
+                fig_ac = go.Figure()
+                fig_ac.add_trace(go.Scatter(x=ac_res["x"], y=ac_res["y"], mode="markers", name="Observed", marker=dict(size=9, color="#bb3e33")))
+                fig_ac.add_trace(go.Scatter(x=ac_res["x_pred"], y=ac_res["y_pred"], mode="lines", name="Regression", line=dict(color="#8b0000")))
+                fig_ac.add_trace(go.Scatter(x=ac_res["x_pred"], y=ac_res["y_upper"], mode="lines", name="95% UCI", line=dict(color="#f57c00", dash="dash")))
+                fig_ac.add_hline(y=stab_spec, line_dash="dash", line_color="red", annotation_text=f"Spec ({stab_spec}%)")
+                if ac_res["shelf_life"]:
+                    fig_ac.add_vline(x=ac_res["shelf_life"], line_dash="dot", line_color="green", annotation_text=f"{ac_res['shelf_life']:.1f}mo")
+                fig_ac.update_layout(xaxis_title="Time (months)", yaxis_title="Impurity (%)", height=380, margin=dict(l=20, r=20, t=30, b=20), legend=dict(orientation="h", y=-0.25))
+                st.plotly_chart(fig_ac, use_container_width=True)
+            else:
+                st.info("Accelerated data insufficient for regression (need ≥ 3 points).")
+
+        # Regulatory interpretation
+        st.markdown("#### Regulatory Interpretation (ICH Q1E)")
+        sig_change = False
+        if ac_res and ac_res["slope"] > 0 and lt_res["slope"] > 0:
+            rate_ratio = ac_res["slope"] / lt_res["slope"]
+            if rate_ratio > 3.0 or (ac_res["shelf_life"] is not None and ac_res["shelf_life"] < 6):
+                sig_change = True
+
+        if sig_change:
+            st.error(
+                f"**Significant change detected at accelerated conditions.** "
+                f"The degradation rate at 40°C/75%RH is **{rate_ratio:.1f}× faster** than long-term. "
+                f"Per ICH Q1E, the proposed shelf life **cannot be extrapolated** beyond the "
+                f"available long-term data coverage ({lt_res['x'].max():.0f} months). "
+                f"Additional long-term data is required to support shelf-life extension."
+            )
+        else:
+            if lt_res["shelf_life"] and lt_res["shelf_life"] >= 24:
+                st.success(
+                    f"No significant change at accelerated conditions. "
+                    f"Long-term 95% UCI crosses the specification at **{lt_res['shelf_life']:.1f} months**. "
+                    f"Per ICH Q1E, a shelf life of **24 months** is supported."
+                )
+            elif lt_res["shelf_life"] and lt_res["shelf_life"] >= 12:
+                st.warning(
+                    f"No significant change at accelerated conditions. "
+                    f"Long-term 95% UCI crosses at **{lt_res['shelf_life']:.1f} months**. "
+                    f"A shelf life of **{int(lt_res['shelf_life'] // 6) * 6} months** may be supportable."
+                )
+            elif lt_res["shelf_life"]:
+                st.error(
+                    f"Long-term 95% UCI crosses the specification at only "
+                    f"**{lt_res['shelf_life']:.1f} months**. Process optimization is recommended."
+                )
+            else:
+                st.success(
+                    f"The impurity trend remains well below the specification ({stab_spec}%) "
+                    f"throughout the projected range. A shelf life of 24+ months is likely supportable."
+                )
+
+st.markdown("## Request a Consultation")
+name = st.text_input("Name", key="contact_name")
+company = st.text_input("Company", key="contact_company")
+email = st.text_input("Email", key="contact_email")
+project = st.text_area("Compound / Project Description", key="contact_project")
+
+if st.button("Submit Request", key="submit_request"):
+    st.success("Thank you. Your request has been received.")
+    st.write(f"Name: {name}")
+    st.write(f"Company: {company}")
+    st.write(f"Email: {email}")
+    st.write(f"Project: {project}")
+
+st.markdown("---")
+st.caption(
+    "ToxiGuard AI is an early-stage decision-support concept for in silico toxicology, "
+    "NAMs interpretation, and regulatory strategy. USP/EP monographs should be used as "
+    "the primary reference for compendial impurity information when available."
+)
