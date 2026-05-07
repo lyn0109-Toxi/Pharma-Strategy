@@ -887,6 +887,7 @@ def render_landing_navigation():
         render_node_button(map_nodes[8], "bottom_map")
 
     render_value_graphic()
+    render_usage_guideline()
 
 
 def render_value_graphic():
@@ -929,6 +930,47 @@ def render_value_graphic():
                 <span>Method readiness</span>
                 <span>Change impact</span>
                 <span>Modern AI / NAMs readiness</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_usage_guideline():
+    """Render practical use guidelines for first-time users."""
+    st.markdown(
+        """
+        <div class="usage-guide">
+            <div class="usage-title">
+                <span>Usage Guideline</span>
+                <b>How to use this navigator in real development work</b>
+            </div>
+            <div class="usage-layout">
+                <div class="usage-scenarios">
+                    <div class="scenario-card">
+                        <strong>When starting development</strong>
+                        <p>Begin with Material or Product Design to define QTPP, CQA, CMA/CPP, and early control logic.</p>
+                        <span>Start: Material → Product Design</span>
+                    </div>
+                    <div class="scenario-card">
+                        <strong>When solving a quality issue</strong>
+                        <p>Open Quality Evidence or Stability to trace specifications, methods, acceptance criteria, and trends.</p>
+                        <span>Start: Quality Evidence → Stability</span>
+                    </div>
+                    <div class="scenario-card">
+                        <strong>When preparing regulatory evidence</strong>
+                        <p>Use Submission, Lifecycle, and Modern Evidence to connect CTD, change control, PQ/CMC, NAMs, and AI credibility.</p>
+                        <span>Start: Submission → Lifecycle</span>
+                    </div>
+                </div>
+                <div class="usage-steps">
+                    <div><i>1</i><span>Select the development domain</span></div>
+                    <div><i>2</i><span>Choose the specific ontology item</span></div>
+                    <div><i>3</i><span>Review data elements and CTD location</span></div>
+                    <div><i>4</i><span>Confirm ICH/FDA guideline rationale</span></div>
+                    <div><i>5</i><span>Use the graph to explain relationships</span></div>
+                </div>
             </div>
         </div>
         """,
@@ -1735,6 +1777,125 @@ st.markdown(
         }
         .value-arrow:after {
             display: none;
+        }
+    }
+    .usage-guide {
+        margin: 1rem 0 1.2rem 0;
+        padding: 1.15rem;
+        border-radius: 1rem;
+        border: 1px solid #d9d1c1;
+        background:
+            linear-gradient(135deg, #fffdf8 0%, #f7fbfc 48%, #eef6f1 100%);
+        box-shadow: 0 16px 34px rgba(23, 33, 38, 0.08);
+    }
+    .usage-title {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .usage-title span {
+        color: #1f6f55;
+        font-size: 0.86rem;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .usage-title b {
+        color: #172126;
+        font-size: clamp(1.25rem, 2vw, 1.8rem);
+        line-height: 1.08;
+        text-align: right;
+    }
+    .usage-layout {
+        display: grid;
+        grid-template-columns: 1.45fr 1fr;
+        gap: 1rem;
+    }
+    .usage-scenarios {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+    .scenario-card {
+        min-height: 11rem;
+        border-radius: 0.85rem;
+        padding: 0.95rem;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid #d9e5ea;
+        box-shadow: 0 10px 22px rgba(23, 33, 38, 0.06);
+    }
+    .scenario-card strong {
+        display: block;
+        color: #172126;
+        font-size: 1.05rem;
+        line-height: 1.12;
+        margin-bottom: 0.5rem;
+    }
+    .scenario-card p {
+        color: #536064;
+        font-size: 0.86rem;
+        font-weight: 750;
+        line-height: 1.35;
+        margin: 0 0 0.75rem 0;
+    }
+    .scenario-card span {
+        display: inline-block;
+        color: #236b9a;
+        background: #e8f1f8;
+        border-radius: 999px;
+        padding: 0.3rem 0.55rem;
+        font-size: 0.75rem;
+        font-weight: 950;
+    }
+    .usage-steps {
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.85rem;
+        border-radius: 0.85rem;
+        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
+    }
+    .usage-steps div {
+        display: grid;
+        grid-template-columns: 2rem 1fr;
+        gap: 0.55rem;
+        align-items: center;
+        min-height: 2.65rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 0.55rem;
+        background: rgba(255,255,255,0.1);
+    }
+    .usage-steps i {
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        background: #f2c84b;
+        color: #172126;
+        font-style: normal;
+        font-size: 0.82rem;
+        font-weight: 950;
+    }
+    .usage-steps span {
+        color: #f8fbfc;
+        font-size: 0.88rem;
+        font-weight: 850;
+        line-height: 1.2;
+    }
+    @media (max-width: 980px) {
+        .usage-title {
+            display: block;
+        }
+        .usage-title b {
+            display: block;
+            text-align: left;
+            margin-top: 0.35rem;
+        }
+        .usage-layout,
+        .usage-scenarios {
+            grid-template-columns: 1fr;
         }
     }
     .flow-spine {
