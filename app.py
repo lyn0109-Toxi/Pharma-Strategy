@@ -855,17 +855,19 @@ def open_playbook(playbook_key):
 
 
 def render_landing_navigation():
-    # ── Map Nodes Data (matches the image) ───────────────────────────────────
+    """Render the premium interactive Evidence Map for the landing page."""
+    
+    # ── Map Nodes Data ───────────────────────────────────────────────────────
     map_nodes = [
-        {"id": "1. Drug Entity", "num": "01", "title": "Material", "sub": "API · Product · Excipient", "ich": "ICH Q11 / Q7 / Q8", "class": "material"},
-        {"id": "2. Pharmaceutical Development", "num": "02", "title": "Product Design", "sub": "QTPP · CQA · CMA/CPP", "ich": "ICH Q8 / Q9", "class": "development"},
-        {"id": "3. Manufacturing Process", "num": "03", "title": "Manufacturing", "sub": "Unit Ops · Validation", "ich": "ICH Q10 / Q13", "class": "process"},
-        {"id": "4. Quality System", "num": "04", "title": "Quality Evidence", "sub": "Spec · Method · Impurity", "ich": "ICH Q6 / Q2 / Q14", "class": "quality"},
-        {"id": "5. Stability", "num": "05", "title": "Stability", "sub": "Shelf Life · Storage", "ich": "ICH Q1", "class": "stability"},
-        {"id": "6. Safety and Efficacy", "num": "06", "title": "Benefit-Risk", "sub": "Nonclinical · Clinical", "ich": "ICH M3 / S / E", "class": "safety"},
-        {"id": "7. Regulatory Documentation", "num": "07", "title": "Submission", "sub": "CTD · DMF · QOS", "ich": "ICH M4 / PQ-CMC", "class": "docs"},
-        {"id": "8. Risk and Lifecycle", "num": "08", "title": "Lifecycle", "sub": "QRM · CAPA · Change", "ich": "ICH Q9 / Q10 / Q12", "class": "lifecycle"},
-        {"id": "9. FDA Modernization", "num": "09", "title": "Modern Evidence", "sub": "Structured Data · AI · NAMs", "ich": "FDA / ICH", "class": "modern"},
+        {"id": "1. Drug Entity", "num": "01", "title": "Material", "sub": "API · Product · Excipient", "ich": "ICH Q11 / Q7 / Q8", "class": "material", "icon": "material"},
+        {"id": "2. Pharmaceutical Development", "num": "02", "title": "Product Design", "sub": "QTPP · CQA · CMA/CPP", "ich": "ICH Q8 / Q9", "class": "development", "icon": "development"},
+        {"id": "3. Manufacturing Process", "num": "03", "title": "Manufacturing", "sub": "Unit Ops · Validation", "ich": "ICH Q10 / Q13", "class": "process", "icon": "process"},
+        {"id": "4. Quality System", "num": "04", "title": "Quality Evidence", "sub": "Spec · Method · Impurity", "ich": "ICH Q6 / Q2 / Q14", "class": "quality", "icon": "quality"},
+        {"id": "5. Stability", "num": "05", "title": "Stability", "sub": "Shelf Life · Storage", "ich": "ICH Q1", "class": "stability", "icon": "stability"},
+        {"id": "6. Safety and Efficacy", "num": "06", "title": "Benefit-Risk", "sub": "Nonclinical · Clinical", "ich": "ICH M3 / S / E", "class": "safety", "icon": "safety"},
+        {"id": "7. Regulatory Documentation", "num": "07", "title": "Submission", "sub": "CTD · DMF · QOS", "ich": "ICH M4 / PQ-CMC", "class": "docs", "icon": "docs"},
+        {"id": "8. Risk and Lifecycle", "num": "08", "title": "Lifecycle", "sub": "QRM · CAPA · Change", "ich": "ICH Q9 / Q10 / Q12", "class": "lifecycle", "icon": "lifecycle"},
+        {"id": "9. FDA Modernization", "num": "09", "title": "Modern Evidence", "sub": "Structured Data · AI · NAMs", "ich": "FDA / ICH", "class": "modern", "icon": "modern"},
     ]
 
     # ── SVG Icons Library ──────────────────────────────────────────────────
@@ -881,115 +883,56 @@ def render_landing_navigation():
         "modern": '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
     }
 
-    # Helper to generate URL
-    def get_nav_url(cat_id):
-        return f"/?category={cat_id.replace(' ', '+')}"
-
     # ── Hero Section ────────────────────────────────────────────────────────
     st.markdown(
         """
         <div class="landing-map-hero">
-            <div>
-                <b>Start Here</b>
-                <span>Click a visual node to open evidence details.</span>
-            </div>
-            <section>
-                <h1>Pharmaceutical Development</h1>
-                <p>Ontology Map & Evidence Navigator</p>
-            </section>
-            <div>
-                <b>Guideline Layer</b>
-                <span>CMC · Quality · Regulatory · Modern AI</span>
-            </div>
+            <div><b>Start Here</b><span>Click a visual node to open evidence details.</span></div>
+            <section><h1>Pharmaceutical Development</h1><p>Ontology Map & Evidence Navigator</p></section>
+            <div><b>Guideline Layer</b><span>CMC · Quality · Regulatory · Modern AI</span></div>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
-    # ── Premium Evidence Map Grid (HTML/CSS) ──────────────────────────────────
-    html_map = f"""
+    # ── Build Grid Items ──────────────────────────────────────────────────
+    grid_items_html = ""
+    for i, node in enumerate(map_nodes):
+        # Insert spacer and core after 4th node
+        if i == 4:
+            core_url = f"/?category={map_nodes[7]['id'].replace(' ', '+')}"
+            grid_items_html += f"""
+            <div class="map-row-spacer"></div>
+            <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center; position: relative;">
+                <a href="{core_url}" class="research-core" style="text-decoration: none;" target="_self">
+                    <span>Evidence Core</span>
+                    <b>Control Strategy</b>
+                    <i>Guideline-backed decisions</i>
+                </a>
+            </div>
+            """
+        
+        # Build individual node
+        url = f"/?category={node['id'].replace(' ', '+')}"
+        icon_svg = icons.get(node['icon'], '')
+        grid_items_html += f"""
+        <a href="{url}" class="evidence-node {node['class']}" target="_self">
+            <div class="node-badge">{node['num']}</div>
+            <div class="node-icon">{icon_svg}</div>
+            <strong>{node['title']}</strong>
+            <em>{node['sub']}</em>
+            <small>{node['ich']}</small>
+        </a>
+        """
+
+    # ── Final Render ──────────────────────────────────────────────────────
+    final_html = f"""
     <div class="evidence-map-shell">
         <div class="golden-path golden-path-one"></div>
         <div class="golden-path golden-path-two"></div>
         <div class="golden-path golden-path-three"></div>
-
         <div class="evidence-grid">
-            <!-- Row 1: 01 - 04 -->
-            <a href="{get_nav_url(map_nodes[0]['id'])}" class="evidence-node {map_nodes[0]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[0]['num']}</div>
-                <div class="node-icon">{icons['material']}</div>
-                <strong>{map_nodes[0]['title']}</strong>
-                <em>{map_nodes[0]['sub']}</em>
-                <small>{map_nodes[0]['ich']}</small>
-            </a>
-            <a href="{get_nav_url(map_nodes[1]['id'])}" class="evidence-node {map_nodes[1]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[1]['num']}</div>
-                <div class="node-icon">{icons['development']}</div>
-                <strong>{map_nodes[1]['title']}</strong>
-                <em>{map_nodes[1]['sub']}</em>
-                <small>{map_nodes[1]['ich']}</small>
-            </a>
-            <a href="{get_nav_url(map_nodes[2]['id'])}" class="evidence-node {map_nodes[2]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[2]['num']}</div>
-                <div class="node-icon">{icons['process']}</div>
-                <strong>{map_nodes[2]['title']}</strong>
-                <em>{map_nodes[2]['sub']}</em>
-                <small>{map_nodes[2]['ich']}</small>
-            </a>
-            <a href="{get_nav_url(map_nodes[3]['id'])}" class="evidence-node {map_nodes[3]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[3]['num']}</div>
-                <div class="node-icon">{icons['quality']}</div>
-                <strong>{map_nodes[3]['title']}</strong>
-                <em>{map_nodes[3]['sub']}</em>
-                <small>{map_nodes[3]['ich']}</small>
-            </a>
-
-            <!-- Row 2: Spacer, Core, Stability -->
-            <div class="map-row-spacer"></div>
-            <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center; position: relative;">
-                <div class="research-core" style="cursor: pointer;" onclick="window.location.href='{get_nav_url(map_nodes[7]['id'])}'">
-                    <span>Evidence Core</span>
-                    <b>Control Strategy</b>
-                    <i>Guideline-backed decisions</i>
-                </div>
-            </div>
-            <a href="{get_nav_url(map_nodes[4]['id'])}" class="evidence-node {map_nodes[4]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[4]['num']}</div>
-                <div class="node-icon">{icons['stability']}</div>
-                <strong>{map_nodes[4]['title']}</strong>
-                <em>{map_nodes[4]['sub']}</em>
-                <small>{map_nodes[4]['ich']}</small>
-            </a>
-
-            <!-- Row 3: 06, 07, 08, 09 -->
-            <a href="{get_nav_url(map_nodes[5]['id'])}" class="evidence-node {map_nodes[5]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[5]['num']}</div>
-                <div class="node-icon">{icons['safety']}</div>
-                <strong>{map_nodes[5]['title']}</strong>
-                <em>{map_nodes[5]['sub']}</em>
-                <small>{map_nodes[5]['ich']}</small>
-            </a>
-            <a href="{get_nav_url(map_nodes[6]['id'])}" class="evidence-node {map_nodes[6]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[6]['num']}</div>
-                <div class="node-icon">{icons['docs']}</div>
-                <strong>{map_nodes[6]['title']}</strong>
-                <em>{map_nodes[6]['sub']}</em>
-                <small>{map_nodes[6]['ich']}</small>
-            </a>
-            <a href="{get_nav_url(map_nodes[7]['id'])}" class="evidence-node {map_nodes[7]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[7]['num']}</div>
-                <div class="node-icon">{icons['lifecycle']}</div>
-                <strong>{map_nodes[7]['title']}</strong>
-                <em>{map_nodes[7]['sub']}</em>
-                <small>{map_nodes[7]['ich']}</small>
-            </a>
-            <a href="{get_nav_url(map_nodes[8]['id'])}" class="evidence-node {map_nodes[8]['class']}" target="_self">
-                <div class="node-badge">{map_nodes[8]['num']}</div>
-                <div class="node-icon">{icons['modern']}</div>
-                <strong>{map_nodes[8]['title']}</strong>
-                <em>{map_nodes[8]['sub']}</em>
-                <small>{map_nodes[8]['ich']}</small>
-            </a>
+            {grid_items_html}
         </div>
     </div>
     """
