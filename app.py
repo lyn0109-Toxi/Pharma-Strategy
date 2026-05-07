@@ -936,7 +936,7 @@ def render_landing_navigation():
         </div>
     </div>
     """
-    st.markdown(html_map, unsafe_allow_html=True)
+    st.markdown(final_html, unsafe_allow_html=True)
 
 
 st.markdown(
