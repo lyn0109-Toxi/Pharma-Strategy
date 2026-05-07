@@ -1,6 +1,8 @@
 from urllib.parse import quote
 
 import streamlit as st
+import streamlit.components.v1 as components
+from ontology_graph import render_ontology_graph, render_full_ontology_graph
 
 st.set_page_config(
     page_title="Pharmaceutical Development Ontology",
@@ -793,7 +795,7 @@ def render_landing_navigation():
         href = f"?category={quote(category)}"
         node_html.append(
             f"""
-            <a class="evidence-node {theme}" href="{href}" aria-label="Open {category}">
+            <a class="evidence-node {theme}" href="{href}" target="_top" aria-label="Open {category}">
                 <span class="node-badge">{number}</span>
                 <span class="node-icon">{icons[icon_key]}</span>
                 <strong>{title}</strong>
@@ -803,8 +805,304 @@ def render_landing_navigation():
             """
         )
 
-    st.markdown(
+    components.html(
         f"""
+        <style>
+            * {{
+                box-sizing: border-box;
+            }}
+            body {{
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                background: transparent;
+            }}
+            .evidence-map-shell {{
+                position: relative;
+                min-height: 760px;
+                overflow: hidden;
+                border-radius: 18px;
+                border: 1px solid #b7d1df;
+                background:
+                    radial-gradient(circle at 11% 12%, rgba(255,255,255,0.92), transparent 190px),
+                    radial-gradient(circle at 64% 53%, rgba(242, 200, 75, 0.28), transparent 210px),
+                    radial-gradient(circle at 88% 19%, rgba(27, 139, 105, 0.18), transparent 190px),
+                    linear-gradient(135deg, #dceff7 0%, #f7fcff 46%, #d8ecf3 100%);
+                box-shadow: 0 26px 62px rgba(8, 32, 51, 0.18);
+                padding: 24px;
+            }}
+            .evidence-map-shell:before {{
+                content: "";
+                position: absolute;
+                inset: 18px;
+                border: 2px solid rgba(255,255,255,0.82);
+                border-radius: 16px;
+                pointer-events: none;
+            }}
+            .evidence-map-title {{
+                position: relative;
+                z-index: 3;
+                width: min(760px, 52%);
+                margin: 0 auto;
+                padding: 14px 26px 16px 26px;
+                text-align: center;
+                border-radius: 0 0 36px 36px;
+                background: rgba(255,255,255,0.8);
+                border: 2px solid rgba(255,255,255,0.94);
+                box-shadow: 0 12px 30px rgba(8, 32, 51, 0.1);
+            }}
+            .evidence-map-title span {{
+                display: block;
+                color: #123d61;
+                font-size: 38px;
+                font-weight: 950;
+                line-height: 1;
+                text-transform: uppercase;
+            }}
+            .evidence-map-title strong {{
+                display: block;
+                margin-top: 5px;
+                color: #17364a;
+                font-size: 21px;
+                line-height: 1.1;
+                text-transform: uppercase;
+            }}
+            .situation-chip, .mini-legend {{
+                position: absolute;
+                z-index: 4;
+                top: 26px;
+                border-radius: 13px;
+                color: white;
+                box-shadow: 0 14px 30px rgba(8, 32, 51, 0.19);
+            }}
+            .situation-chip {{
+                left: 26px;
+                width: 250px;
+                padding: 15px 16px;
+                background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
+            }}
+            .situation-chip b, .mini-legend b {{
+                display: block;
+                font-size: 17px;
+                margin-bottom: 5px;
+            }}
+            .situation-chip span {{
+                color: #d8eadf;
+                font-size: 15px;
+                font-weight: 750;
+                line-height: 1.25;
+            }}
+            .mini-legend {{
+                right: 26px;
+                width: 190px;
+                padding: 13px;
+                background: linear-gradient(180deg, #172126 0%, #30495a 100%);
+            }}
+            .mini-legend span {{
+                display: block;
+                padding: 5px 8px;
+                margin-top: 4px;
+                border-radius: 6px;
+                background: rgba(255,255,255,0.15);
+                font-weight: 850;
+                color: #f8fbfc;
+            }}
+            .golden-path {{
+                position: absolute;
+                z-index: 1;
+                left: 6%;
+                right: 6%;
+                height: 6px;
+                border-radius: 999px;
+                background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 44%, #1b8b69 70%, #236b9a 100%);
+                box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
+            }}
+            .golden-path-one {{ top: 205px; }}
+            .golden-path-two {{ top: 410px; left: 8%; right: 8%; opacity: 0.68; }}
+            .golden-path-three {{ top: 590px; left: 13%; right: 12%; opacity: 0.58; }}
+            .research-core {{
+                position: absolute;
+                z-index: 2;
+                left: 50%;
+                top: 330px;
+                transform: translateX(-50%);
+                width: 335px;
+                height: 150px;
+                display: grid;
+                place-items: center;
+                text-align: center;
+                border-radius: 50%;
+                background:
+                    radial-gradient(circle, rgba(255,255,255,0.96) 0%, rgba(232,244,251,0.9) 62%, rgba(242,200,75,0.22) 100%);
+                border: 3px solid rgba(242, 200, 75, 0.7);
+                box-shadow: 0 0 35px rgba(242, 200, 75, 0.45);
+            }}
+            .research-core span {{
+                display: block;
+                color: #236b9a;
+                font-weight: 950;
+                font-size: 14px;
+                text-transform: uppercase;
+            }}
+            .research-core b {{
+                display: block;
+                color: #172126;
+                font-size: 25px;
+                line-height: 1.05;
+            }}
+            .research-core i {{
+                display: block;
+                color: #536064;
+                font-style: normal;
+                font-weight: 800;
+                font-size: 14px;
+            }}
+            .evidence-grid {{
+                position: relative;
+                z-index: 3;
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 16px;
+                margin-top: 34px;
+                padding: 16px 10px 6px 10px;
+            }}
+            .map-spacer {{
+                grid-column: 1 / -1;
+                min-height: 150px;
+            }}
+            .evidence-node {{
+                position: relative;
+                display: grid;
+                min-height: 195px;
+                align-content: start;
+                gap: 7px;
+                padding: 16px;
+                border-radius: 16px;
+                color: #172126;
+                text-decoration: none;
+                overflow: hidden;
+                isolation: isolate;
+                border: 2px solid rgba(255,255,255,0.76);
+                box-shadow: 0 18px 36px rgba(8, 32, 51, 0.13);
+                transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+            }}
+            .evidence-node:hover {{
+                transform: translateY(-5px);
+                box-shadow: 0 24px 48px rgba(8, 32, 51, 0.2);
+                filter: saturate(1.08);
+            }}
+            .evidence-node:before {{
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: -2;
+                background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.68) 100%);
+            }}
+            .evidence-node:after {{
+                content: "";
+                position: absolute;
+                right: -56px;
+                bottom: -60px;
+                width: 160px;
+                height: 160px;
+                z-index: -1;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.35);
+            }}
+            .node-badge {{
+                position: absolute;
+                left: 15px;
+                top: 14px;
+                display: grid;
+                place-items: center;
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                color: white;
+                background: rgba(18, 61, 97, 0.94);
+                font-size: 16px;
+                font-weight: 950;
+                box-shadow: 0 8px 18px rgba(8,32,51,0.22);
+            }}
+            .node-icon {{
+                display: grid;
+                place-items: center;
+                width: 90px;
+                height: 90px;
+                margin: 23px auto 3px auto;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.84);
+                border: 2px solid rgba(255,255,255,0.92);
+                box-shadow: inset 0 0 0 6px rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
+            }}
+            .node-icon svg {{
+                width: 60px;
+                height: 60px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 3.2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }}
+            .evidence-node strong {{
+                display: block;
+                color: #172126;
+                font-size: 22px;
+                font-weight: 950;
+                line-height: 1.05;
+                text-align: center;
+            }}
+            .evidence-node em {{
+                display: block;
+                color: #29383d;
+                font-size: 15px;
+                font-style: normal;
+                font-weight: 850;
+                line-height: 1.18;
+                text-align: center;
+                min-height: 34px;
+            }}
+            .evidence-node small {{
+                display: inline-grid;
+                justify-self: center;
+                margin-top: auto;
+                padding: 5px 9px;
+                border-radius: 999px;
+                background: rgba(255,255,255,0.75);
+                color: #17364a;
+                font-size: 12px;
+                font-weight: 950;
+                text-align: center;
+            }}
+            .material {{ background: linear-gradient(135deg, #dff2fb 0%, #7eb4d4 100%); color: #236b9a; }}
+            .development {{ background: linear-gradient(135deg, #e2f5ec 0%, #63b798 100%); color: #1f6f55; }}
+            .process {{ background: linear-gradient(135deg, #fff0d9 0%, #f39b2f 100%); color: #9a4f19; }}
+            .quality {{ background: linear-gradient(135deg, #e2f4eb 0%, #54a57a 100%); color: #176f58; }}
+            .stability {{ background: linear-gradient(135deg, #fff1d5 0%, #df9c3c 100%); color: #9a6a1f; }}
+            .safety {{ background: linear-gradient(135deg, #e0eef8 0%, #6aa0c9 100%); color: #174b78; }}
+            .docs {{ background: linear-gradient(135deg, #e4f4ed 0%, #4da47b 100%); color: #1f6f55; }}
+            .lifecycle {{ background: linear-gradient(135deg, #fff0df 0%, #e78533 100%); color: #ad5b22; }}
+            .modern {{ background: linear-gradient(135deg, #e8e5f3 0%, #5f78b8 100%); color: #3a4c8a; }}
+            @media (max-width: 980px) {{
+                .evidence-map-shell {{ min-height: auto; padding: 16px; }}
+                .situation-chip, .mini-legend {{
+                    position: relative;
+                    left: auto;
+                    right: auto;
+                    top: auto;
+                    width: 100%;
+                    margin-bottom: 10px;
+                }}
+                .evidence-map-title {{
+                    width: 100%;
+                    margin: 0 0 12px 0;
+                }}
+                .evidence-map-title span {{ font-size: 29px; }}
+                .evidence-map-title strong {{ font-size: 17px; }}
+                .golden-path, .research-core {{ display: none; }}
+                .evidence-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }}
+                .map-spacer {{ display: none; }}
+            }}
+        </style>
         <div class="evidence-map-shell">
             <div class="evidence-map-title">
                 <span>Pharmaceutical Development</span>
@@ -836,7 +1134,8 @@ def render_landing_navigation():
             </div>
         </div>
         """,
-        unsafe_allow_html=True,
+        height=790,
+        scrolling=False,
     )
 
 
@@ -2152,40 +2451,51 @@ for index, guideline_name in enumerate(item_data["guidelines"]):
 
 
 st.markdown("### Ontology Relationship")
-relationship_examples = {
-    "Drug Substance / API": "DrugSubstance --hasImpurity--> Impurity --controlledBy--> Specification --testedBy--> AnalyticalMethod",
-    "Drug Product": "DrugProduct --hasCQA--> CQA --controlledBy--> Specification --monitoredBy--> StabilityStudy",
-    "Excipient": "Excipient --hasFunctionalRole--> ExcipientRole --mayAffect--> CQA",
-    "QTPP": "QTPP --definesTargetFor--> DrugProduct --drivesSelectionOf--> CQA",
-    "CQA": "CQA --testedBy--> AnalyticalMethod --validatedBy--> MethodValidation",
-    "CMA / CPP": "CMA/CPP --mayImpact--> CQA --mitigatedBy--> ControlStrategy",
-    "Unit Operations": "UnitOperation --hasParameter--> CPP --affects--> CQA",
-    "Process Validation": "ProcessValidation --verifies--> ManufacturingProcess --supports--> ControlStrategy",
-    "Continuous Manufacturing": "ContinuousProcess --monitoredBy--> PAT --controlledBy--> RealTimeControlStrategy",
-    "Specification": "Specification --contains--> TestItem --hasAcceptanceCriteria--> AcceptanceCriterion",
-    "Analytical Method": "AnalyticalMethod --hasPurpose--> AnalyticalTargetProfile --validatedBy--> ICHQ2Validation",
-    "Impurity Control": "Impurity --hasOrigin--> ProcessOrDegradation --controlledBy--> ControlStrategy",
-    "Stability Study": "StabilityStudy --monitors--> CQA --supports--> ShelfLife",
-    "Shelf Life and Storage": "ShelfLife --supportedBy--> StabilityData --appearsIn--> Labeling",
-    "Nonclinical Evidence": "NonclinicalStudy --supports--> FirstInHumanExposure --summarizedIn--> CTDModule4",
-    "Clinical Evidence": "ClinicalStudy --supports--> BenefitRisk --summarizedIn--> CTDModule5",
-    "CTD Module 3": "QualityEvidence --submittedIn--> CTDModule3 --summarizedIn--> QOS",
-    "DMF / Supplier Evidence": "SupplierEvidence --referencedBy--> Application --authorizedBy--> LOA",
-    "Quality Risk Management": "RiskAssessment --prioritizes--> ControlAction --reviewedBy--> QualitySystem",
-    "Lifecycle Change Management": "Change --impacts--> CQA/CPP/Method/Stability --managedBy--> Q12Strategy",
-    "PQ/CMC Structured Data": "CMCDataElement --mapsTo--> CTDSection --supports--> StructuredReview",
-    "NAMs Evidence": "NAMsModel --hasContextOfUse--> RegulatoryQuestion --integratedBy--> WeightOfEvidence",
-    "AI Credibility": "AIModel --hasContextOfUse--> Decision --hasCredibilityEvidence--> ValidationPackage",
-}
-st.markdown(
-    f"""
-    <div class="relationship-box">
-        {relationship_examples.get(item, "OntologyItem --alignedWith--> Guideline --supportedBy--> Evidence")}
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+
+graph_tab, text_tab = st.tabs(["🔗 Interactive Graph", "📄 Text View"])
+
+with graph_tab:
+    render_ontology_graph(item)
+
+with text_tab:
+    relationship_examples = {
+        "Drug Substance / API": "DrugSubstance --hasImpurity--> Impurity --controlledBy--> Specification --testedBy--> AnalyticalMethod",
+        "Drug Product": "DrugProduct --hasCQA--> CQA --controlledBy--> Specification --monitoredBy--> StabilityStudy",
+        "Excipient": "Excipient --hasFunctionalRole--> ExcipientRole --mayAffect--> CQA",
+        "QTPP": "QTPP --definesTargetFor--> DrugProduct --drivesSelectionOf--> CQA",
+        "CQA": "CQA --testedBy--> AnalyticalMethod --validatedBy--> MethodValidation",
+        "CMA / CPP": "CMA/CPP --mayImpact--> CQA --mitigatedBy--> ControlStrategy",
+        "Unit Operations": "UnitOperation --hasParameter--> CPP --affects--> CQA",
+        "Process Validation": "ProcessValidation --verifies--> ManufacturingProcess --supports--> ControlStrategy",
+        "Continuous Manufacturing": "ContinuousProcess --monitoredBy--> PAT --controlledBy--> RealTimeControlStrategy",
+        "Specification": "Specification --contains--> TestItem --hasAcceptanceCriteria--> AcceptanceCriterion",
+        "Analytical Method": "AnalyticalMethod --hasPurpose--> AnalyticalTargetProfile --validatedBy--> ICHQ2Validation",
+        "Impurity Control": "Impurity --hasOrigin--> ProcessOrDegradation --controlledBy--> ControlStrategy",
+        "Stability Study": "StabilityStudy --monitors--> CQA --supports--> ShelfLife",
+        "Shelf Life and Storage": "ShelfLife --supportedBy--> StabilityData --appearsIn--> Labeling",
+        "Nonclinical Evidence": "NonclinicalStudy --supports--> FirstInHumanExposure --summarizedIn--> CTDModule4",
+        "Clinical Evidence": "ClinicalStudy --supports--> BenefitRisk --summarizedIn--> CTDModule5",
+        "CTD Module 3": "QualityEvidence --submittedIn--> CTDModule3 --summarizedIn--> QOS",
+        "DMF / Supplier Evidence": "SupplierEvidence --referencedBy--> Application --authorizedBy--> LOA",
+        "Quality Risk Management": "RiskAssessment --prioritizes--> ControlAction --reviewedBy--> QualitySystem",
+        "Lifecycle Change Management": "Change --impacts--> CQA/CPP/Method/Stability --managedBy--> Q12Strategy",
+        "PQ/CMC Structured Data": "CMCDataElement --mapsTo--> CTDSection --supports--> StructuredReview",
+        "NAMs Evidence": "NAMsModel --hasContextOfUse--> RegulatoryQuestion --integratedBy--> WeightOfEvidence",
+        "AI Credibility": "AIModel --hasContextOfUse--> Decision --hasCredibilityEvidence--> ValidationPackage",
+    }
+    st.markdown(
+        f"""
+        <div class="relationship-box">
+            {relationship_examples.get(item, "OntologyItem --alignedWith--> Guideline --supportedBy--> Evidence")}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 with st.expander("Full ontology index"):
-    st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
+    full_tab1, full_tab2 = st.tabs(["🔗 Full Graph View", "📋 Table View"])
+    with full_tab1:
+        render_full_ontology_graph(height=700)
+    with full_tab2:
+        st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
