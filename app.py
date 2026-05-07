@@ -868,6 +868,19 @@ def render_landing_navigation():
         {"id": "9. FDA Modernization", "num": "09", "title": "Modern Evidence", "sub": "Structured Data · AI · NAMs", "ich": "FDA / ICH", "class": "modern"},
     ]
 
+    # ── SVG Icons Library ──────────────────────────────────────────────────
+    icons = {
+        "material": '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+        "development": '<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+        "process": '<svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+        "quality": '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg>',
+        "stability": '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+        "safety": '<svg viewBox="0 0 24 24"><path d="M12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7zm0-12c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/><path d="M12 11V7h-1v4H8v1h3v4h1v-4h3v-1h-3z"/></svg>',
+        "docs": '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+        "lifecycle": '<svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>',
+        "modern": '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+    }
+
     # Helper to generate URL
     def get_nav_url(cat_id):
         return f"/?category={cat_id.replace(' ', '+')}"
@@ -894,10 +907,8 @@ def render_landing_navigation():
     )
 
     # ── Premium Evidence Map Grid (HTML/CSS) ──────────────────────────────────
-    # Using a custom grid to match the image exactly
     html_map = f"""
     <div class="evidence-map-shell">
-        <!-- Connecting Threads -->
         <div class="golden-path golden-path-one"></div>
         <div class="golden-path golden-path-two"></div>
         <div class="golden-path golden-path-three"></div>
@@ -906,35 +917,35 @@ def render_landing_navigation():
             <!-- Row 1: 01 - 04 -->
             <a href="{get_nav_url(map_nodes[0]['id'])}" class="evidence-node {map_nodes[0]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[0]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['material']}</div>
                 <strong>{map_nodes[0]['title']}</strong>
                 <em>{map_nodes[0]['sub']}</em>
                 <small>{map_nodes[0]['ich']}</small>
             </a>
             <a href="{get_nav_url(map_nodes[1]['id'])}" class="evidence-node {map_nodes[1]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[1]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['development']}</div>
                 <strong>{map_nodes[1]['title']}</strong>
                 <em>{map_nodes[1]['sub']}</em>
                 <small>{map_nodes[1]['ich']}</small>
             </a>
             <a href="{get_nav_url(map_nodes[2]['id'])}" class="evidence-node {map_nodes[2]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[2]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['process']}</div>
                 <strong>{map_nodes[2]['title']}</strong>
                 <em>{map_nodes[2]['sub']}</em>
                 <small>{map_nodes[2]['ich']}</small>
             </a>
             <a href="{get_nav_url(map_nodes[3]['id'])}" class="evidence-node {map_nodes[3]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[3]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['quality']}</div>
                 <strong>{map_nodes[3]['title']}</strong>
                 <em>{map_nodes[3]['sub']}</em>
                 <small>{map_nodes[3]['ich']}</small>
             </a>
 
             <!-- Row 2: Spacer, Core, Stability -->
-            <div style="grid-column: span 1;"></div>
+            <div class="map-row-spacer"></div>
             <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center; position: relative;">
                 <div class="research-core" style="cursor: pointer;" onclick="window.location.href='{get_nav_url(map_nodes[7]['id'])}'">
                     <span>Evidence Core</span>
@@ -944,7 +955,7 @@ def render_landing_navigation():
             </div>
             <a href="{get_nav_url(map_nodes[4]['id'])}" class="evidence-node {map_nodes[4]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[4]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['stability']}</div>
                 <strong>{map_nodes[4]['title']}</strong>
                 <em>{map_nodes[4]['sub']}</em>
                 <small>{map_nodes[4]['ich']}</small>
@@ -953,28 +964,28 @@ def render_landing_navigation():
             <!-- Row 3: 06, 07, 08, 09 -->
             <a href="{get_nav_url(map_nodes[5]['id'])}" class="evidence-node {map_nodes[5]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[5]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['safety']}</div>
                 <strong>{map_nodes[5]['title']}</strong>
                 <em>{map_nodes[5]['sub']}</em>
                 <small>{map_nodes[5]['ich']}</small>
             </a>
             <a href="{get_nav_url(map_nodes[6]['id'])}" class="evidence-node {map_nodes[6]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[6]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['docs']}</div>
                 <strong>{map_nodes[6]['title']}</strong>
                 <em>{map_nodes[6]['sub']}</em>
                 <small>{map_nodes[6]['ich']}</small>
             </a>
             <a href="{get_nav_url(map_nodes[7]['id'])}" class="evidence-node {map_nodes[7]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[7]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['lifecycle']}</div>
                 <strong>{map_nodes[7]['title']}</strong>
                 <em>{map_nodes[7]['sub']}</em>
                 <small>{map_nodes[7]['ich']}</small>
             </a>
             <a href="{get_nav_url(map_nodes[8]['id'])}" class="evidence-node {map_nodes[8]['class']}" target="_self">
                 <div class="node-badge">{map_nodes[8]['num']}</div>
-                <div class="node-icon"></div>
+                <div class="node-icon">{icons['modern']}</div>
                 <strong>{map_nodes[8]['title']}</strong>
                 <em>{map_nodes[8]['sub']}</em>
                 <small>{map_nodes[8]['ich']}</small>
@@ -1277,58 +1288,35 @@ st.markdown(
         height: 0.38rem;
         border-radius: 999px;
         background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 44%, #1b8b69 70%, #236b9a 100%);
-        box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
+        box-shadow: 0 0 20px rgba(242, 200, 75, 0.4);
     }
     .golden-path-one { top: 12.6rem; }
-    .golden-path-two {
-        top: 25.2rem;
-        left: 8%;
-        right: 8%;
-        opacity: 0.68;
-    }
-    .golden-path-three {
-        top: 36.2rem;
-        left: 13%;
-        right: 12%;
-        opacity: 0.58;
-    }
+    .golden-path-two { top: 25.2rem; left: 8%; right: 8%; opacity: 0.6; }
+    .golden-path-three { top: 36.2rem; left: 13%; right: 12%; opacity: 0.4; }
+
     .research-core {
-        position: absolute;
-        z-index: 2;
-        left: 50%;
-        top: 20.2rem;
-        transform: translateX(-50%);
-        width: 21rem;
-        height: 9.5rem;
-        display: grid;
-        place-items: center;
-        text-align: center;
+        width: 18rem;
+        height: 8.5rem;
+        background: radial-gradient(circle, #ffffff 0%, #f7fcff 100%);
+        border: 2px solid #f2c84b;
         border-radius: 50%;
-        background:
-            radial-gradient(circle, rgba(255,255,255,0.96) 0%, rgba(232,244,251,0.9) 62%, rgba(242,200,75,0.22) 100%);
-        border: 3px solid rgba(242, 200, 75, 0.7);
-        box-shadow: 0 0 35px rgba(242, 200, 75, 0.45);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 30px rgba(242,200,75,0.4);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-align: center;
+        margin: 0 auto;
     }
-    .research-core span {
-        display: block;
-        color: #236b9a;
-        font-weight: 950;
-        font-size: 0.9rem;
-        text-transform: uppercase;
+    .research-core:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 45px rgba(242,200,75,0.6);
     }
-    .research-core b {
-        display: block;
-        color: #172126;
-        font-size: 1.55rem;
-        line-height: 1.05;
-    }
-    .research-core i {
-        display: block;
-        color: #536064;
-        font-style: normal;
-        font-weight: 800;
-        font-size: 0.85rem;
-    }
+    .research-core span { font-size: 0.82rem; font-weight: 900; color: #236b9a; text-transform: uppercase; letter-spacing: 0.05em; }
+    .research-core b { font-size: 1.65rem; font-weight: 950; color: #172126; margin: 0.25rem 0; line-height: 1; }
+    .research-core i { font-size: 0.88rem; font-style: normal; font-weight: 800; color: #536064; }
+
     .evidence-grid {
         position: relative;
         z-index: 3;
@@ -1343,7 +1331,7 @@ st.markdown(
         flex-direction: column;
         align-items: center;
         text-align: center;
-        min-height: 14rem;
+        min-height: 14.5rem;
         padding: 1.8rem 1rem 1.2rem 1rem;
         border-radius: 1.2rem;
         color: #172126;
@@ -1381,6 +1369,14 @@ st.markdown(
         border-radius: 50%;
         margin-bottom: 1rem;
         box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+        display: grid;
+        place-items: center;
+    }
+    .node-icon svg {
+        width: 2.6rem;
+        height: 2.6rem;
+        fill: #123d61;
+        opacity: 0.8;
     }
     .evidence-node strong {
         font-size: 1.4rem;
@@ -1408,85 +1404,38 @@ st.markdown(
         text-transform: uppercase;
     }
 
-    /* Pastel Gradients to match the image */
+    /* Pastel Gradients */
     .evidence-node.material { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
     .evidence-node.development { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); }
     .evidence-node.process { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
     .evidence-node.quality { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
-    .evidence-node.stability { background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); grid-column: 4; grid-row: 2; }
+    .evidence-node.stability { background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); }
     .evidence-node.safety { background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%); }
     .evidence-node.docs { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); }
     .evidence-node.lifecycle { background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%); }
     .evidence-node.modern { background: linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%); }
 
-    .research-core {
-        width: 18rem;
-        height: 8rem;
-        background: radial-gradient(circle, #ffffff 0%, #f7fcff 100%);
-        border: 2px solid #f2c84b;
-        border-radius: 50%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 30px rgba(242,200,75,0.4);
-        transition: transform 0.2s;
+    .map-row-spacer {
+        grid-column: span 1;
     }
-    .research-core:hover { transform: scale(1.05); }
-    .research-core span { font-size: 0.8rem; font-weight: 900; color: #236b9a; text-transform: uppercase; }
-    .research-core b { font-size: 1.6rem; font-weight: 900; color: #1a1a1a; margin: 0.2rem 0; }
-    .research-core i { font-size: 0.85rem; font-style: normal; font-weight: 700; color: #536064; }
-
-    .golden-path {
-        position: absolute;
-        height: 4px;
-        background: linear-gradient(90deg, #f2c84b, #1b8b69);
-        border-radius: 999px;
-        z-index: 1;
-    }
-    .golden-path-one { top: 7rem; left: 10%; right: 10%; }
-    .golden-path-two { top: 18rem; left: 15%; right: 15%; opacity: 0.6; }
-    .golden-path-three { top: 29rem; left: 10%; right: 10%; opacity: 0.4; }
-    @media (max-width: 980px) {
-        .evidence-map-shell {
-            min-height: auto;
-            padding: 1rem;
-        }
-        .evidence-map-title {
-            width: 100%;
-            margin-top: 5.8rem;
-        }
-        .evidence-map-title span {
-            font-size: 1.8rem;
-        }
-        .evidence-map-title strong {
-            font-size: 1.05rem;
-        }
-        .situation-chip, .mini-legend {
-            position: relative;
-            left: auto;
-            right: auto;
-            top: auto;
-            width: 100%;
-            margin-bottom: 0.7rem;
-        }
-        .mini-legend {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.35rem;
-        }
-        .mini-legend b {
-            grid-column: 1 / -1;
-        }
-        .golden-path, .research-core {
-            display: none;
-        }
+    @media (max-width: 1100px) {
         .evidence-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-top: 1rem;
+            grid-template-columns: repeat(2, 1fr);
         }
-        .map-spacer {
+        .map-row-spacer, .golden-path {
             display: none;
+        }
+        .research-core {
+            grid-column: span 2 !important;
+        }
+    }
+    @media (max-width: 600px) {
+        .evidence-grid {
+            grid-template-columns: 1fr;
+        }
+        .research-core {
+            grid-column: span 1 !important;
+            width: 100%;
         }
     }
     @media (max-width: 620px) {
