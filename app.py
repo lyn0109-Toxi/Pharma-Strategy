@@ -1,5 +1,3 @@
-from urllib.parse import quote
-
 import streamlit as st
 from ontology_graph import render_full_ontology_graph, render_ontology_graph
 
@@ -747,392 +745,71 @@ def open_playbook(playbook_key):
 
 
 def render_landing_navigation():
-    map_height = 980
     map_nodes = [
-        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8", "material", "molecule", "5%", "24%", "22%", "21%"),
-        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9", "development", "design", "31%", "24%", "18%", "21%"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13", "process", "factory", "53%", "24%", "18%", "21%"),
-        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14", "quality", "quality", "75%", "24%", "20%", "21%"),
-        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1", "stability", "stability", "76%", "52%", "18%", "20%"),
-        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E", "safety", "safety", "6%", "64%", "23%", "21%"),
-        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC", "docs", "docs", "34%", "65%", "17%", "20%"),
-        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12", "lifecycle", "lifecycle", "55%", "65%", "18%", "20%"),
-        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH", "modern", "ai", "76%", "78%", "19%", "20%"),
+        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8"),
+        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9"),
+        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13"),
+        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14"),
+        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1"),
+        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E"),
+        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC"),
+        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12"),
+        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH"),
     ]
 
-    icons = {
-        "molecule": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="24" cy="26" r="9"/><circle cx="46" cy="15" r="6"/><circle cx="48" cy="45" r="8"/><circle cx="13" cy="47" r="5"/><path d="M31 22 L41 17 M30 32 L41 40 M20 35 L15 43"/><path d="M36 47c7-14 16-18 21-10 3 5-4 12-14 14"/></svg>
-        """,
-        "design": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M12 52V12M12 52h42"/><path d="M15 48c10-25 19-31 35-31-4 17-12 28-35 31Z"/><path d="M22 41c9-6 18-11 29-24"/><path d="M20 18l5 8 6-15 8 28 5-10 7 6"/></svg>
-        """,
-        "factory": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M11 51h44M16 51V28l11 7V27l12 8V18h10v33"/><path d="M21 42h6M34 42h6M47 42h4M40 18v-6h8v6"/><path d="M18 24h7M43 12h8"/></svg>
-        """,
-        "quality": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="17"/><path d="M41 41l12 12"/><path d="M18 35l7-8 7 4 8-13"/><path d="M17 43h22M49 13h6M49 22h6M49 31h6"/></svg>
-        """,
-        "stability": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M15 52h34M20 52V16h24v36"/><path d="M20 28h24M20 40h24"/><path d="M27 22h10M27 34h10M27 46h10"/></svg>
-        """,
-        "safety": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 10c10 7 17 7 17 7v13c0 13-7 21-17 25-10-4-17-12-17-25V17s7 0 17-7Z"/><path d="M23 33h18M32 24v18"/><path d="M13 52c8-6 13-8 19-8s11 2 19 8"/></svg>
-        """,
-        "docs": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10h22l8 8v36H18Z"/><path d="M40 10v10h8"/><path d="M24 29h17M24 37h17M24 45h11"/><path d="M13 16h5M13 22h5M13 28h5"/></svg>
-        """,
-        "lifecycle": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M19 24a15 15 0 0 1 24-8l4 4"/><path d="M47 12v8h-8"/><path d="M45 40a15 15 0 0 1-24 8l-4-4"/><path d="M17 52v-8h8"/><path d="M24 32c5-8 11 8 16 0"/></svg>
-        """,
-        "ai": """
-            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M22 18h20a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V24a6 6 0 0 1 6-6Z"/><path d="M25 18v-7M39 18v-7M25 53v-7M39 53v-7M16 27H9M16 38H9M55 27h-7M55 38h-7"/><circle cx="26" cy="31" r="3"/><circle cx="38" cy="31" r="3"/><path d="M25 39c5 3 9 3 14 0"/></svg>
-        """,
-    }
+    def render_node_button(node, key_prefix):
+        category, number, title, objects, guides = node
+        label = f"{number}  {title}\n{objects}\n{guides}"
+        if st.button(label, key=f"{key_prefix}_{category}", help=f"Open {category} details"):
+            open_category(category)
 
-    node_html = []
-    for category, number, title, objects, guides, theme, icon_key, left, top, width, height in map_nodes:
-        encoded_category = quote(category)
-        node_html.append(
-            f"""
-            <a class="evidence-node {theme}" href="?category={encoded_category}" style="left:{left}; top:{top}; width:{width}; height:{height};" aria-label="Open {category}">
-                <span class="node-badge">{number}</span>
-                <span class="node-icon">{icons[icon_key]}</span>
-                <strong>{title}</strong>
-                <em>{objects}</em>
-                <small>{guides}</small>
-            </a>
-            """
-        )
-
-    st.html(
-        f"""
-        <style>
-            * {{
-                box-sizing: border-box;
-            }}
-            body {{
-                margin: 0;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                background: transparent;
-            }}
-            .evidence-map-shell {{
-                position: relative;
-                min-height: {map_height}px;
-                overflow: hidden;
-                border-radius: 18px;
-                border: 1px solid #b7d1df;
-                background:
-                    radial-gradient(circle at 11% 12%, rgba(255,255,255,0.92), transparent 190px),
-                    radial-gradient(circle at 64% 53%, rgba(242, 200, 75, 0.28), transparent 210px),
-                    radial-gradient(circle at 88% 19%, rgba(27, 139, 105, 0.18), transparent 190px),
-                    linear-gradient(135deg, #dceff7 0%, #f7fcff 46%, #d8ecf3 100%);
-                box-shadow: 0 26px 62px rgba(8, 32, 51, 0.18);
-                padding: 24px;
-            }}
-            .evidence-map-shell:before {{
-                content: "";
-                position: absolute;
-                inset: 18px;
-                border: 2px solid rgba(255,255,255,0.82);
-                border-radius: 16px;
-                pointer-events: none;
-            }}
-            .evidence-map-title {{
-                position: relative;
-                z-index: 3;
-                width: min(680px, 44%);
-                margin: 0 auto;
-                padding: 14px 26px 14px 26px;
-                text-align: center;
-                border-radius: 0 0 36px 36px;
-                background: rgba(255,255,255,0.8);
-                border: 2px solid rgba(255,255,255,0.94);
-                box-shadow: 0 12px 30px rgba(8, 32, 51, 0.1);
-            }}
-            .evidence-map-title span {{
-                display: block;
-                color: #123d61;
-                font-size: 34px;
-                font-weight: 950;
-                line-height: 1;
-                text-transform: uppercase;
-            }}
-            .evidence-map-title strong {{
-                display: block;
-                margin-top: 5px;
-                color: #17364a;
-                font-size: 18px;
-                line-height: 1.1;
-                text-transform: uppercase;
-            }}
-            .situation-chip, .mini-legend {{
-                position: absolute;
-                z-index: 4;
-                top: 26px;
-                border-radius: 13px;
-                color: white;
-                box-shadow: 0 14px 30px rgba(8, 32, 51, 0.19);
-            }}
-            .situation-chip {{
-                left: 26px;
-                width: 230px;
-                padding: 15px 16px;
-                background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
-            }}
-            .situation-chip b, .mini-legend b {{
-                display: block;
-                font-size: 17px;
-                margin-bottom: 5px;
-            }}
-            .situation-chip span {{
-                color: #d8eadf;
-                font-size: 15px;
-                font-weight: 750;
-                line-height: 1.25;
-            }}
-            .mini-legend {{
-                right: 26px;
-                width: 170px;
-                padding: 13px;
-                background: linear-gradient(180deg, #172126 0%, #30495a 100%);
-            }}
-            .mini-legend span {{
-                display: block;
-                padding: 5px 8px;
-                margin-top: 4px;
-                border-radius: 6px;
-                background: rgba(255,255,255,0.15);
-                font-weight: 850;
-                color: #f8fbfc;
-            }}
-            .golden-path {{
-                position: absolute;
-                z-index: 1;
-                left: 6%;
-                right: 6%;
-                height: 6px;
-                border-radius: 999px;
-                background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 44%, #1b8b69 70%, #236b9a 100%);
-                box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
-            }}
-            .golden-path-one {{ top: 325px; }}
-            .golden-path-two {{ top: 590px; left: 8%; right: 8%; opacity: 0.68; }}
-            .golden-path-three {{ top: 835px; left: 13%; right: 12%; opacity: 0.58; }}
-            .research-core {{
-                position: absolute;
-                z-index: 2;
-                left: 50%;
-                top: 500px;
-                transform: translateX(-50%);
-                width: 290px;
-                height: 126px;
-                display: grid;
-                place-items: center;
-                text-align: center;
-                border-radius: 50%;
-                background:
-                    radial-gradient(circle, rgba(255,255,255,0.96) 0%, rgba(232,244,251,0.9) 62%, rgba(242,200,75,0.22) 100%);
-                border: 3px solid rgba(242, 200, 75, 0.7);
-                box-shadow: 0 0 35px rgba(242, 200, 75, 0.45);
-            }}
-            .research-core span {{
-                display: block;
-                color: #236b9a;
-                font-weight: 950;
-                font-size: 14px;
-                text-transform: uppercase;
-            }}
-            .research-core b {{
-                display: block;
-                color: #172126;
-                font-size: 23px;
-                line-height: 1.05;
-            }}
-            .research-core i {{
-                display: block;
-                color: #536064;
-                font-style: normal;
-                font-weight: 800;
-                font-size: 14px;
-            }}
-            .evidence-node {{
-                position: absolute;
-                z-index: 3;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                align-items: center;
-                gap: 5px;
-                padding: 14px 12px 12px 12px;
-                border-radius: 16px;
-                color: #172126;
-                text-decoration: none;
-                overflow: hidden;
-                isolation: isolate;
-                border: 2px solid rgba(255,255,255,0.76);
-                box-shadow: 0 18px 36px rgba(8, 32, 51, 0.13);
-                transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
-                cursor: pointer;
-            }}
-            .evidence-node:hover {{
-                transform: translateY(-5px);
-                box-shadow: 0 24px 48px rgba(8, 32, 51, 0.2);
-                filter: saturate(1.08);
-            }}
-            .evidence-node:before {{
-                content: "";
-                position: absolute;
-                inset: 0;
-                z-index: -2;
-                background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.68) 100%);
-            }}
-            .evidence-node:after {{
-                content: "";
-                position: absolute;
-                right: -56px;
-                bottom: -60px;
-                width: 160px;
-                height: 160px;
-                z-index: -1;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.35);
-            }}
-            .node-badge {{
-                position: absolute;
-                left: 15px;
-                top: 14px;
-                display: grid;
-                place-items: center;
-                width: 38px;
-                height: 38px;
-                border-radius: 50%;
-                color: white;
-                background: rgba(18, 61, 97, 0.94);
-                font-size: 16px;
-                font-weight: 950;
-                box-shadow: 0 8px 18px rgba(8,32,51,0.22);
-            }}
-            .node-icon {{
-                display: grid;
-                place-items: center;
-                width: 68px;
-                height: 68px;
-                margin: 7px auto 0 auto;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.84);
-                border: 2px solid rgba(255,255,255,0.92);
-                box-shadow: inset 0 0 0 6px rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
-            }}
-            .node-icon svg {{
-                width: 45px;
-                height: 45px;
-                fill: none;
-                stroke: currentColor;
-                stroke-width: 3.2;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-            }}
-            .evidence-node strong {{
-                display: block;
-                color: #172126;
-                font-size: clamp(18px, 1.55vw, 25px);
-                font-weight: 950;
-                line-height: 1.05;
-                text-align: center;
-                white-space: normal;
-            }}
-            .evidence-node em {{
-                display: block;
-                color: #29383d;
-                font-size: clamp(12px, 1.05vw, 16px);
-                font-style: normal;
-                font-weight: 850;
-                line-height: 1.18;
-                text-align: center;
-                min-height: 32px;
-            }}
-            .evidence-node small {{
-                display: inline-block;
-                margin-top: auto;
-                padding: 5px 9px;
-                border-radius: 999px;
-                background: rgba(255,255,255,0.75);
-                color: #17364a;
-                font-size: clamp(10px, 0.85vw, 13px);
-                font-weight: 950;
-                text-align: center;
-            }}
-            .material {{ background: linear-gradient(135deg, #dff2fb 0%, #7eb4d4 100%); color: #236b9a; }}
-            .development {{ background: linear-gradient(135deg, #e2f5ec 0%, #63b798 100%); color: #1f6f55; }}
-            .process {{ background: linear-gradient(135deg, #fff0d9 0%, #f39b2f 100%); color: #9a4f19; }}
-            .quality {{ background: linear-gradient(135deg, #e2f4eb 0%, #54a57a 100%); color: #176f58; }}
-            .stability {{ background: linear-gradient(135deg, #fff1d5 0%, #df9c3c 100%); color: #9a6a1f; }}
-            .safety {{ background: linear-gradient(135deg, #e0eef8 0%, #6aa0c9 100%); color: #174b78; }}
-            .docs {{ background: linear-gradient(135deg, #e4f4ed 0%, #4da47b 100%); color: #1f6f55; }}
-            .lifecycle {{ background: linear-gradient(135deg, #fff0df 0%, #e78533 100%); color: #ad5b22; }}
-            .modern {{ background: linear-gradient(135deg, #e8e5f3 0%, #5f78b8 100%); color: #3a4c8a; }}
-            @media (max-width: 980px) {{
-                .evidence-map-shell {{ min-height: 1560px; padding: 16px; }}
-                .situation-chip, .mini-legend {{
-                    position: relative;
-                    left: auto;
-                    right: auto;
-                    top: auto;
-                    width: 100%;
-                    margin-bottom: 10px;
-                }}
-                .evidence-map-title {{
-                    width: 100%;
-                    margin: 0 0 12px 0;
-                }}
-                .evidence-map-title span {{ font-size: 29px; }}
-                .evidence-map-title strong {{ font-size: 17px; }}
-                .golden-path, .research-core {{ display: none; }}
-                .evidence-node {{
-                    left: 4% !important;
-                    width: 92% !important;
-                    height: 130px !important;
-                }}
-                .evidence-node:nth-of-type(1) {{ top: 245px !important; }}
-                .evidence-node:nth-of-type(2) {{ top: 390px !important; }}
-                .evidence-node:nth-of-type(3) {{ top: 535px !important; }}
-                .evidence-node:nth-of-type(4) {{ top: 680px !important; }}
-                .evidence-node:nth-of-type(5) {{ top: 825px !important; }}
-                .evidence-node:nth-of-type(6) {{ top: 970px !important; }}
-                .evidence-node:nth-of-type(7) {{ top: 1115px !important; }}
-                .evidence-node:nth-of-type(8) {{ top: 1260px !important; }}
-                .evidence-node:nth-of-type(9) {{ top: 1405px !important; }}
-            }}
-        </style>
-        <div class="evidence-map-shell">
-            <div class="evidence-map-title">
-                <span>Pharmaceutical Development</span>
-                <strong>Ontology Map & Evidence Navigator</strong>
-            </div>
-            <div class="situation-chip">
+    st.markdown(
+        """
+        <div class="landing-map-hero">
+            <div>
                 <b>Start Here</b>
                 <span>Click a visual node to open evidence details.</span>
             </div>
-            <div class="mini-legend">
+            <section>
+                <h1>Pharmaceutical Development</h1>
+                <p>Ontology Map & Evidence Navigator</p>
+            </section>
+            <div>
                 <b>Guideline Layer</b>
-                <span>CMC</span>
-                <span>Quality</span>
-                <span>Regulatory</span>
-                <span>Modern AI</span>
+                <span>CMC · Quality · Regulatory · Modern AI</span>
             </div>
-            <div class="golden-path golden-path-one"></div>
-            <div class="golden-path golden-path-two"></div>
-            <div class="golden-path golden-path-three"></div>
-            <div class="research-core">
-                <span>Evidence Core</span>
-                <b>Control Strategy</b>
-                <i>Guideline-backed decisions</i>
-            </div>
-            {''.join(node_html)}
         </div>
-        """
+        """,
+        unsafe_allow_html=True,
     )
+    top_cols = st.columns([1.18, 1, 1, 1.08], gap="large")
+    for column, node in zip(top_cols, map_nodes[:4]):
+        with column:
+            render_node_button(node, "top_map")
+
+    st.markdown(
+        """
+        <div class="evidence-core-strip">
+            <span>Evidence Core</span>
+            <b>Control Strategy</b>
+            <i>Guideline-backed decisions</i>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    lower_left, lower_mid, lower_right = st.columns([1.25, 1.85, 1.1], gap="large")
+    with lower_left:
+        render_node_button(map_nodes[5], "bottom_map")
+    with lower_mid:
+        mid_a, mid_b = st.columns(2, gap="large")
+        with mid_a:
+            render_node_button(map_nodes[6], "bottom_map")
+        with mid_b:
+            render_node_button(map_nodes[7], "bottom_map")
+    with lower_right:
+        render_node_button(map_nodes[4], "bottom_map")
+        render_node_button(map_nodes[8], "bottom_map")
 
 
 st.markdown(
@@ -1755,6 +1432,104 @@ st.markdown(
     .map-section.ontology {
         background: linear-gradient(135deg, #fffdf8 0%, #eef6f1 100%);
         border-color: #d9d1c1;
+    }
+    .landing-map-hero {
+        display: grid;
+        grid-template-columns: 1fr 1.55fr 1fr;
+        gap: 1rem;
+        align-items: stretch;
+        padding: 1.05rem;
+        margin: 0.2rem 0 1rem 0;
+        border-radius: 1rem;
+        border: 1px solid #b7d1df;
+        background:
+            radial-gradient(circle at 14% 70%, rgba(242, 200, 75, 0.22), transparent 18rem),
+            radial-gradient(circle at 84% 20%, rgba(27, 139, 105, 0.16), transparent 16rem),
+            linear-gradient(135deg, #e6f4fb 0%, #f8fbfc 50%, #e1eef4 100%);
+        box-shadow: 0 24px 54px rgba(8, 32, 51, 0.14);
+    }
+    .landing-map-hero > div,
+    .landing-map-hero > section {
+        border-radius: 0.8rem;
+        padding: 1rem 1.1rem;
+        min-height: 7.2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .landing-map-hero > div:first-child {
+        color: white;
+        background: linear-gradient(135deg, #0d5d49 0%, #2e715e 100%);
+    }
+    .landing-map-hero > div:last-child {
+        color: white;
+        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
+    }
+    .landing-map-hero b {
+        display: block;
+        font-size: 1.25rem;
+        line-height: 1.1;
+    }
+    .landing-map-hero span {
+        display: block;
+        margin-top: 0.45rem;
+        color: #d8eadf;
+        font-size: 0.95rem;
+        font-weight: 800;
+        line-height: 1.3;
+    }
+    .landing-map-hero section {
+        text-align: center;
+        background: rgba(255,255,255,0.78);
+        border: 2px solid rgba(255,255,255,0.9);
+    }
+    .landing-map-hero h1 {
+        margin: 0;
+        color: #123d61;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        line-height: 0.96;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+    .landing-map-hero p {
+        margin: 0.5rem 0 0 0;
+        color: #17364a;
+        font-size: clamp(1rem, 1.8vw, 1.45rem);
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .evidence-core-strip {
+        position: relative;
+        margin: 1rem 0;
+        padding: 1rem 1.2rem;
+        text-align: center;
+        border-radius: 999px;
+        background:
+            linear-gradient(90deg, rgba(242, 200, 75, 0.82) 0%, rgba(255,255,255,0.88) 28%, rgba(255,255,255,0.94) 62%, rgba(46,113,94,0.55) 100%);
+        border: 2px solid rgba(242, 200, 75, 0.6);
+        box-shadow: 0 14px 30px rgba(8, 32, 51, 0.09);
+    }
+    .evidence-core-strip span,
+    .evidence-core-strip b,
+    .evidence-core-strip i {
+        display: block;
+        font-style: normal;
+    }
+    .evidence-core-strip span {
+        color: #236b9a;
+        font-size: 0.9rem;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+    .evidence-core-strip b {
+        color: #172126;
+        font-size: 1.7rem;
+        line-height: 1.05;
+    }
+    .evidence-core-strip i {
+        color: #536064;
+        font-size: 0.95rem;
+        font-weight: 850;
     }
     .flow-spine {
         grid-template-columns: auto 1fr auto 1fr auto 1fr auto 1fr auto;
