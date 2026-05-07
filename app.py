@@ -886,6 +886,55 @@ def render_landing_navigation():
         render_node_button(map_nodes[4], "bottom_map")
         render_node_button(map_nodes[8], "bottom_map")
 
+    render_value_graphic()
+
+
+def render_value_graphic():
+    """Show what the site helps users do, as a visual value flow."""
+    st.markdown(
+        """
+        <div class="value-navigator">
+            <div class="value-header">
+                <span>What this site enables</span>
+                <b>From development question to regulatory evidence</b>
+            </div>
+            <div class="value-flow">
+                <div class="value-step find">
+                    <i>01</i>
+                    <strong>Find</strong>
+                    <p>Locate the right development domain from a CQA, method, stability, DMF, or change question.</p>
+                </div>
+                <div class="value-arrow"></div>
+                <div class="value-step connect">
+                    <i>02</i>
+                    <strong>Connect</strong>
+                    <p>Link material, product design, process, quality, stability, CTD, and lifecycle objects.</p>
+                </div>
+                <div class="value-arrow"></div>
+                <div class="value-step justify">
+                    <i>03</i>
+                    <strong>Justify</strong>
+                    <p>See the ICH/FDA guideline rationale behind each evidence requirement.</p>
+                </div>
+                <div class="value-arrow"></div>
+                <div class="value-step decide">
+                    <i>04</i>
+                    <strong>Decide</strong>
+                    <p>Turn scattered knowledge into a submission, quality, or lifecycle action path.</p>
+                </div>
+            </div>
+            <div class="value-outcomes">
+                <span>CMC evidence map</span>
+                <span>Specification logic</span>
+                <span>Method readiness</span>
+                <span>Change impact</span>
+                <span>Modern AI / NAMs readiness</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 st.markdown(
     """
@@ -1542,6 +1591,151 @@ st.markdown(
         color: #536064;
         font-size: 0.95rem;
         font-weight: 850;
+    }
+    .value-navigator {
+        margin: 1.35rem 0 0.75rem 0;
+        padding: 1.15rem;
+        border-radius: 1rem;
+        border: 1px solid #cddce3;
+        background:
+            radial-gradient(circle at 10% 12%, rgba(35,107,154,0.12), transparent 15rem),
+            radial-gradient(circle at 88% 84%, rgba(242,200,75,0.22), transparent 16rem),
+            linear-gradient(135deg, #ffffff 0%, #f3f8fb 56%, #eef6f1 100%);
+        box-shadow: 0 18px 42px rgba(8, 32, 51, 0.1);
+    }
+    .value-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: end;
+        margin-bottom: 1rem;
+    }
+    .value-header span {
+        color: #236b9a;
+        font-size: 0.86rem;
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .value-header b {
+        color: #172126;
+        font-size: clamp(1.35rem, 2.2vw, 2rem);
+        line-height: 1.05;
+        text-align: right;
+    }
+    .value-flow {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    .value-step {
+        position: relative;
+        min-height: 10.5rem;
+        padding: 1rem;
+        border-radius: 0.85rem;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.75);
+        box-shadow: 0 12px 28px rgba(23, 33, 38, 0.08);
+    }
+    .value-step:after {
+        content: "";
+        position: absolute;
+        right: -2.6rem;
+        bottom: -3.2rem;
+        width: 8rem;
+        height: 8rem;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.45);
+    }
+    .value-step i {
+        display: inline-grid;
+        place-items: center;
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: 50%;
+        background: #123d61;
+        color: #ffffff;
+        font-style: normal;
+        font-size: 0.85rem;
+        font-weight: 950;
+        margin-bottom: 0.85rem;
+    }
+    .value-step strong {
+        display: block;
+        color: #172126;
+        font-size: 1.35rem;
+        line-height: 1.05;
+        margin-bottom: 0.45rem;
+    }
+    .value-step p {
+        position: relative;
+        z-index: 2;
+        color: #3d4a4e;
+        font-size: 0.9rem;
+        font-weight: 750;
+        line-height: 1.35;
+        margin: 0;
+    }
+    .value-step.find { background: linear-gradient(135deg, #e3f2fd 0%, #c8dfec 100%); }
+    .value-step.connect { background: linear-gradient(135deg, #e8f5e9 0%, #cde8da 100%); }
+    .value-step.justify { background: linear-gradient(135deg, #fff8df 0%, #f2dca0 100%); }
+    .value-step.decide { background: linear-gradient(135deg, #efe9f7 0%, #cfd7ee 100%); }
+    .value-arrow {
+        width: 2.4rem;
+        align-self: center;
+        height: 0.38rem;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
+        box-shadow: 0 0 16px rgba(242, 200, 75, 0.46);
+    }
+    .value-arrow:after {
+        content: "";
+        display: block;
+        float: right;
+        margin-top: -0.34rem;
+        border-left: 0.7rem solid #1b8b69;
+        border-top: 0.53rem solid transparent;
+        border-bottom: 0.53rem solid transparent;
+    }
+    .value-outcomes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .value-outcomes span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2rem;
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid #d9e5ea;
+        color: #17364a;
+        font-size: 0.82rem;
+        font-weight: 900;
+    }
+    @media (max-width: 980px) {
+        .value-header {
+            display: block;
+        }
+        .value-header b {
+            display: block;
+            text-align: left;
+            margin-top: 0.35rem;
+        }
+        .value-flow {
+            grid-template-columns: 1fr;
+        }
+        .value-arrow {
+            width: 0.38rem;
+            height: 1.8rem;
+            justify-self: center;
+        }
+        .value-arrow:after {
+            display: none;
+        }
     }
     .flow-spine {
         grid-template-columns: auto 1fr auto 1fr auto 1fr auto 1fr auto;
