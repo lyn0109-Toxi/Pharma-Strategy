@@ -831,13 +831,22 @@ def render_landing_navigation():
         "modern": '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
     }
 
-    # ── Hero Section ────────────────────────────────────────────────────────
+    # ── Hero Section (Start Here & Title & Guideline Layer) ────────────────
     st.markdown(
         """
         <div class="landing-map-hero">
-            <div><b>Start Here</b><span>Click a visual node to open evidence details.</span></div>
-            <section><h1>Pharmaceutical Development</h1><p>Ontology Map & Evidence Navigator</p></section>
-            <div><b>Guideline Layer</b><span>CMC · Quality · Regulatory · Modern AI</span></div>
+            <div class="hero-label-wrap">
+                <b>Start Here</b>
+                <span>Click a visual node to open evidence details.</span>
+            </div>
+            <section class="hero-title-wrap">
+                <h1>Pharmaceutical Development</h1>
+                <p>Ontology Map & Evidence Navigator</p>
+            </section>
+            <div class="hero-label-wrap text-right">
+                <b>Guideline Layer</b>
+                <span>CMC · Quality · Regulatory · Modern AI</span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True
@@ -846,7 +855,7 @@ def render_landing_navigation():
     # ── Build Grid Items ──────────────────────────────────────────────────
     grid_items_html = ""
     for i, node in enumerate(map_nodes):
-        # Insert spacer and core after 4th node
+        # Insert spacer and core after 4th node (between 04 and 05)
         if i == 4:
             core_url = f"/?category={map_nodes[7]['id'].replace(' ', '+')}"
             grid_items_html += f"""
@@ -1450,10 +1459,10 @@ st.markdown(
     .landing-map-hero {
         display: grid;
         grid-template-columns: 1fr 1.55fr 1fr;
-        gap: 1rem;
-        align-items: stretch;
-        padding: 1.05rem;
-        margin: 0.2rem 0 1rem 0;
+        gap: 1.2rem;
+        align-items: center;
+        padding: 1.2rem;
+        margin: 0.2rem 0 1.2rem 0;
         border-radius: 1rem;
         border: 1px solid #b7d1df;
         background:
@@ -1462,55 +1471,53 @@ st.markdown(
             linear-gradient(135deg, #e6f4fb 0%, #f8fbfc 50%, #e1eef4 100%);
         box-shadow: 0 24px 54px rgba(8, 32, 51, 0.14);
     }
-    .landing-map-hero > div,
-    .landing-map-hero > section {
+    .hero-label-wrap {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.45);
+        border: 1px solid rgba(183, 209, 223, 0.6);
+        padding: 0.9rem 1.1rem;
         border-radius: 0.8rem;
-        padding: 1rem 1.1rem;
-        min-height: 7.2rem;
+        backdrop-filter: blur(10px);
+    }
+    .hero-label-wrap b {
+        color: #123d61;
+        font-size: 0.9rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.15rem;
+    }
+    .hero-label-wrap span {
+        color: #536064;
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.3;
+    }
+    .hero-title-wrap {
+        text-align: center;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
-    .landing-map-hero > div:first-child {
-        color: white;
-        background: linear-gradient(135deg, #0d5d49 0%, #2e715e 100%);
+    .hero-title-wrap h1 {
+        margin: 0 !important;
+        font-size: 2.1rem !important;
+        color: #172126 !important;
+        letter-spacing: -0.02em;
     }
-    .landing-map-hero > div:last-child {
-        color: white;
-        background: linear-gradient(180deg, #172126 0%, #30495a 100%);
-    }
-    .landing-map-hero b {
-        display: block;
-        font-size: 1.25rem;
-        line-height: 1.1;
-    }
-    .landing-map-hero span {
-        display: block;
-        margin-top: 0.45rem;
-        color: #d8eadf;
-        font-size: 0.95rem;
-        font-weight: 800;
-        line-height: 1.3;
-    }
-    .landing-map-hero section {
-        text-align: center;
-        background: rgba(255,255,255,0.78);
-        border: 2px solid rgba(255,255,255,0.9);
-    }
-    .landing-map-hero h1 {
-        margin: 0;
-        color: #123d61;
-        font-size: clamp(2rem, 4vw, 3.4rem);
-        line-height: 0.96;
-        font-weight: 950;
-        text-transform: uppercase;
-    }
-    .landing-map-hero p {
-        margin: 0.5rem 0 0 0;
-        color: #17364a;
-        font-size: clamp(1rem, 1.8vw, 1.45rem);
+    .hero-title-wrap p {
+        margin: 0.1rem 0 0 0 !important;
+        font-size: 1rem;
         font-weight: 900;
+        color: #236b9a;
         text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .text-right {
+        text-align: right;
+        align-items: flex-end;
     }
     .evidence-core-strip {
         position: relative;
