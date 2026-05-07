@@ -749,15 +749,15 @@ def open_playbook(playbook_key):
 
 def render_landing_navigation():
     map_nodes = [
-        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8", "material", "molecule"),
-        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9", "development", "design"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13", "process", "factory"),
-        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14", "quality", "quality"),
-        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1", "stability", "stability"),
-        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E", "safety", "safety"),
-        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC", "docs", "docs"),
-        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12", "lifecycle", "lifecycle"),
-        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH", "modern", "ai"),
+        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8", "material", "molecule", "4.5%", "18%", "23%", "24%"),
+        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9", "development", "design", "31%", "18%", "18%", "24%"),
+        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13", "process", "factory", "52%", "18%", "18%", "24%"),
+        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14", "quality", "quality", "73%", "18%", "22%", "24%"),
+        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1", "stability", "stability", "76%", "47%", "18%", "20%"),
+        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E", "safety", "safety", "5.5%", "56%", "24%", "25%"),
+        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC", "docs", "docs", "33%", "57%", "18%", "24%"),
+        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12", "lifecycle", "lifecycle", "54%", "57%", "18%", "24%"),
+        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH", "modern", "ai", "75%", "70%", "20%", "22%"),
     ]
 
     icons = {
@@ -791,11 +791,11 @@ def render_landing_navigation():
     }
 
     node_html = []
-    for category, number, title, objects, guides, theme, icon_key in map_nodes:
-        href = f"?category={quote(category)}"
+    for category, number, title, objects, guides, theme, icon_key, left, top, width, height in map_nodes:
+        encoded_category = quote(category)
         node_html.append(
             f"""
-            <a class="evidence-node {theme}" href="{href}" target="_top" aria-label="Open {category}">
+            <a class="evidence-node {theme}" href="?category={encoded_category}" target="_top" onclick="return openCategory('{encoded_category}')" style="left:{left}; top:{top}; width:{width}; height:{height};" aria-label="Open {category}">
                 <span class="node-badge">{number}</span>
                 <span class="node-icon">{icons[icon_key]}</span>
                 <strong>{title}</strong>
@@ -917,16 +917,16 @@ def render_landing_navigation():
                 box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
             }}
             .golden-path-one {{ top: 205px; }}
-            .golden-path-two {{ top: 410px; left: 8%; right: 8%; opacity: 0.68; }}
-            .golden-path-three {{ top: 590px; left: 13%; right: 12%; opacity: 0.58; }}
+            .golden-path-two {{ top: 430px; left: 8%; right: 8%; opacity: 0.68; }}
+            .golden-path-three {{ top: 620px; left: 13%; right: 12%; opacity: 0.58; }}
             .research-core {{
                 position: absolute;
                 z-index: 2;
                 left: 50%;
-                top: 330px;
+                top: 355px;
                 transform: translateX(-50%);
-                width: 335px;
-                height: 150px;
+                width: 310px;
+                height: 132px;
                 display: grid;
                 place-items: center;
                 text-align: center;
@@ -956,26 +956,15 @@ def render_landing_navigation():
                 font-weight: 800;
                 font-size: 14px;
             }}
-            .evidence-grid {{
-                position: relative;
-                z-index: 3;
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-                gap: 16px;
-                margin-top: 34px;
-                padding: 16px 10px 6px 10px;
-            }}
-            .map-spacer {{
-                grid-column: 1 / -1;
-                min-height: 150px;
-            }}
             .evidence-node {{
-                position: relative;
-                display: grid;
-                min-height: 195px;
-                align-content: start;
-                gap: 7px;
-                padding: 16px;
+                position: absolute;
+                z-index: 3;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 6px;
+                padding: 16px 14px 13px 14px;
                 border-radius: 16px;
                 color: #172126;
                 text-decoration: none;
@@ -984,6 +973,7 @@ def render_landing_navigation():
                 border: 2px solid rgba(255,255,255,0.76);
                 box-shadow: 0 18px 36px rgba(8, 32, 51, 0.13);
                 transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+                cursor: pointer;
             }}
             .evidence-node:hover {{
                 transform: translateY(-5px);
@@ -1026,17 +1016,17 @@ def render_landing_navigation():
             .node-icon {{
                 display: grid;
                 place-items: center;
-                width: 90px;
-                height: 90px;
-                margin: 23px auto 3px auto;
+                width: 78px;
+                height: 78px;
+                margin: 7px auto 0 auto;
                 border-radius: 50%;
                 background: rgba(255,255,255,0.84);
                 border: 2px solid rgba(255,255,255,0.92);
                 box-shadow: inset 0 0 0 6px rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
             }}
             .node-icon svg {{
-                width: 60px;
-                height: 60px;
+                width: 52px;
+                height: 52px;
                 fill: none;
                 stroke: currentColor;
                 stroke-width: 3.2;
@@ -1046,24 +1036,24 @@ def render_landing_navigation():
             .evidence-node strong {{
                 display: block;
                 color: #172126;
-                font-size: 22px;
+                font-size: 21px;
                 font-weight: 950;
                 line-height: 1.05;
                 text-align: center;
+                white-space: normal;
             }}
             .evidence-node em {{
                 display: block;
                 color: #29383d;
-                font-size: 15px;
+                font-size: 14px;
                 font-style: normal;
                 font-weight: 850;
                 line-height: 1.18;
                 text-align: center;
-                min-height: 34px;
+                min-height: 32px;
             }}
             .evidence-node small {{
-                display: inline-grid;
-                justify-self: center;
+                display: inline-block;
                 margin-top: auto;
                 padding: 5px 9px;
                 border-radius: 999px;
@@ -1083,7 +1073,7 @@ def render_landing_navigation():
             .lifecycle {{ background: linear-gradient(135deg, #fff0df 0%, #e78533 100%); color: #ad5b22; }}
             .modern {{ background: linear-gradient(135deg, #e8e5f3 0%, #5f78b8 100%); color: #3a4c8a; }}
             @media (max-width: 980px) {{
-                .evidence-map-shell {{ min-height: auto; padding: 16px; }}
+                .evidence-map-shell {{ min-height: 1560px; padding: 16px; }}
                 .situation-chip, .mini-legend {{
                     position: relative;
                     left: auto;
@@ -1099,8 +1089,20 @@ def render_landing_navigation():
                 .evidence-map-title span {{ font-size: 29px; }}
                 .evidence-map-title strong {{ font-size: 17px; }}
                 .golden-path, .research-core {{ display: none; }}
-                .evidence-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; }}
-                .map-spacer {{ display: none; }}
+                .evidence-node {{
+                    left: 4% !important;
+                    width: 92% !important;
+                    height: 130px !important;
+                }}
+                .evidence-node:nth-of-type(1) {{ top: 245px !important; }}
+                .evidence-node:nth-of-type(2) {{ top: 390px !important; }}
+                .evidence-node:nth-of-type(3) {{ top: 535px !important; }}
+                .evidence-node:nth-of-type(4) {{ top: 680px !important; }}
+                .evidence-node:nth-of-type(5) {{ top: 825px !important; }}
+                .evidence-node:nth-of-type(6) {{ top: 970px !important; }}
+                .evidence-node:nth-of-type(7) {{ top: 1115px !important; }}
+                .evidence-node:nth-of-type(8) {{ top: 1260px !important; }}
+                .evidence-node:nth-of-type(9) {{ top: 1405px !important; }}
             }}
         </style>
         <div class="evidence-map-shell">
@@ -1127,12 +1129,18 @@ def render_landing_navigation():
                 <b>Control Strategy</b>
                 <i>Guideline-backed decisions</i>
             </div>
-            <div class="evidence-grid">
-                {''.join(node_html[:4])}
-                <div class="map-spacer"></div>
-                {''.join(node_html[4:])}
-            </div>
+            {''.join(node_html)}
         </div>
+        <script>
+            function openCategory(category) {{
+                try {{
+                    window.top.location.href = "?category=" + category;
+                    return false;
+                }} catch (error) {{
+                    return true;
+                }}
+            }}
+        </script>
         """,
         height=790,
         scrolling=False,
