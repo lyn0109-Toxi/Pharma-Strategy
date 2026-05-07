@@ -2,7 +2,7 @@ from urllib.parse import quote
 
 import streamlit as st
 import streamlit.components.v1 as components
-from ontology_graph import render_ontology_graph, render_full_ontology_graph
+from ontology_graph import render_full_ontology_graph, render_ontology_graph
 
 st.set_page_config(
     page_title="Pharmaceutical Development Ontology",
@@ -2451,8 +2451,7 @@ for index, guideline_name in enumerate(item_data["guidelines"]):
 
 
 st.markdown("### Ontology Relationship")
-
-graph_tab, text_tab = st.tabs(["🔗 Interactive Graph", "📄 Text View"])
+graph_tab, text_tab = st.tabs(["Interactive Graph", "Text View"])
 
 with graph_tab:
     render_ontology_graph(item)
@@ -2494,8 +2493,8 @@ with text_tab:
 
 
 with st.expander("Full ontology index"):
-    full_tab1, full_tab2 = st.tabs(["🔗 Full Graph View", "📋 Table View"])
-    with full_tab1:
+    full_graph_tab, table_tab = st.tabs(["Full Graph View", "Table View"])
+    with full_graph_tab:
         render_full_ontology_graph(height=700)
-    with full_tab2:
+    with table_tab:
         st.dataframe(flatten_items(), hide_index=True, use_container_width=True)
