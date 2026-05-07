@@ -1,7 +1,6 @@
 from urllib.parse import quote
 
 import streamlit as st
-import streamlit.components.v1 as components
 from ontology_graph import render_full_ontology_graph, render_ontology_graph
 
 st.set_page_config(
@@ -748,16 +747,17 @@ def open_playbook(playbook_key):
 
 
 def render_landing_navigation():
+    map_height = 980
     map_nodes = [
-        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8", "material", "molecule", "4.5%", "18%", "23%", "24%"),
-        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9", "development", "design", "31%", "18%", "18%", "24%"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13", "process", "factory", "52%", "18%", "18%", "24%"),
-        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14", "quality", "quality", "73%", "18%", "22%", "24%"),
-        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1", "stability", "stability", "76%", "47%", "18%", "20%"),
-        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E", "safety", "safety", "5.5%", "56%", "24%", "25%"),
-        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC", "docs", "docs", "33%", "57%", "18%", "24%"),
-        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12", "lifecycle", "lifecycle", "54%", "57%", "18%", "24%"),
-        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH", "modern", "ai", "75%", "70%", "20%", "22%"),
+        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8", "material", "molecule", "5%", "24%", "22%", "21%"),
+        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9", "development", "design", "31%", "24%", "18%", "21%"),
+        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13", "process", "factory", "53%", "24%", "18%", "21%"),
+        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14", "quality", "quality", "75%", "24%", "20%", "21%"),
+        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1", "stability", "stability", "76%", "52%", "18%", "20%"),
+        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E", "safety", "safety", "6%", "64%", "23%", "21%"),
+        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC", "docs", "docs", "34%", "65%", "17%", "20%"),
+        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12", "lifecycle", "lifecycle", "55%", "65%", "18%", "20%"),
+        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH", "modern", "ai", "76%", "78%", "19%", "20%"),
     ]
 
     icons = {
@@ -795,7 +795,7 @@ def render_landing_navigation():
         encoded_category = quote(category)
         node_html.append(
             f"""
-            <a class="evidence-node {theme}" href="?category={encoded_category}" target="_top" onclick="return openCategory('{encoded_category}')" style="left:{left}; top:{top}; width:{width}; height:{height};" aria-label="Open {category}">
+            <a class="evidence-node {theme}" href="?category={encoded_category}" style="left:{left}; top:{top}; width:{width}; height:{height};" aria-label="Open {category}">
                 <span class="node-badge">{number}</span>
                 <span class="node-icon">{icons[icon_key]}</span>
                 <strong>{title}</strong>
@@ -805,7 +805,7 @@ def render_landing_navigation():
             """
         )
 
-    components.html(
+    st.html(
         f"""
         <style>
             * {{
@@ -818,7 +818,7 @@ def render_landing_navigation():
             }}
             .evidence-map-shell {{
                 position: relative;
-                min-height: 760px;
+                min-height: {map_height}px;
                 overflow: hidden;
                 border-radius: 18px;
                 border: 1px solid #b7d1df;
@@ -841,9 +841,9 @@ def render_landing_navigation():
             .evidence-map-title {{
                 position: relative;
                 z-index: 3;
-                width: min(760px, 52%);
+                width: min(680px, 44%);
                 margin: 0 auto;
-                padding: 14px 26px 16px 26px;
+                padding: 14px 26px 14px 26px;
                 text-align: center;
                 border-radius: 0 0 36px 36px;
                 background: rgba(255,255,255,0.8);
@@ -853,7 +853,7 @@ def render_landing_navigation():
             .evidence-map-title span {{
                 display: block;
                 color: #123d61;
-                font-size: 38px;
+                font-size: 34px;
                 font-weight: 950;
                 line-height: 1;
                 text-transform: uppercase;
@@ -862,7 +862,7 @@ def render_landing_navigation():
                 display: block;
                 margin-top: 5px;
                 color: #17364a;
-                font-size: 21px;
+                font-size: 18px;
                 line-height: 1.1;
                 text-transform: uppercase;
             }}
@@ -876,7 +876,7 @@ def render_landing_navigation():
             }}
             .situation-chip {{
                 left: 26px;
-                width: 250px;
+                width: 230px;
                 padding: 15px 16px;
                 background: linear-gradient(135deg, #0d5d49 0%, #1b8b69 100%);
             }}
@@ -893,7 +893,7 @@ def render_landing_navigation():
             }}
             .mini-legend {{
                 right: 26px;
-                width: 190px;
+                width: 170px;
                 padding: 13px;
                 background: linear-gradient(180deg, #172126 0%, #30495a 100%);
             }}
@@ -916,17 +916,17 @@ def render_landing_navigation():
                 background: linear-gradient(90deg, #f2c84b 0%, #f2c84b 44%, #1b8b69 70%, #236b9a 100%);
                 box-shadow: 0 0 20px rgba(242, 200, 75, 0.88);
             }}
-            .golden-path-one {{ top: 205px; }}
-            .golden-path-two {{ top: 430px; left: 8%; right: 8%; opacity: 0.68; }}
-            .golden-path-three {{ top: 620px; left: 13%; right: 12%; opacity: 0.58; }}
+            .golden-path-one {{ top: 325px; }}
+            .golden-path-two {{ top: 590px; left: 8%; right: 8%; opacity: 0.68; }}
+            .golden-path-three {{ top: 835px; left: 13%; right: 12%; opacity: 0.58; }}
             .research-core {{
                 position: absolute;
                 z-index: 2;
                 left: 50%;
-                top: 355px;
+                top: 500px;
                 transform: translateX(-50%);
-                width: 310px;
-                height: 132px;
+                width: 290px;
+                height: 126px;
                 display: grid;
                 place-items: center;
                 text-align: center;
@@ -946,7 +946,7 @@ def render_landing_navigation():
             .research-core b {{
                 display: block;
                 color: #172126;
-                font-size: 25px;
+                font-size: 23px;
                 line-height: 1.05;
             }}
             .research-core i {{
@@ -963,8 +963,8 @@ def render_landing_navigation():
                 flex-direction: column;
                 justify-content: flex-start;
                 align-items: center;
-                gap: 6px;
-                padding: 16px 14px 13px 14px;
+                gap: 5px;
+                padding: 14px 12px 12px 12px;
                 border-radius: 16px;
                 color: #172126;
                 text-decoration: none;
@@ -1016,8 +1016,8 @@ def render_landing_navigation():
             .node-icon {{
                 display: grid;
                 place-items: center;
-                width: 78px;
-                height: 78px;
+                width: 68px;
+                height: 68px;
                 margin: 7px auto 0 auto;
                 border-radius: 50%;
                 background: rgba(255,255,255,0.84);
@@ -1025,8 +1025,8 @@ def render_landing_navigation():
                 box-shadow: inset 0 0 0 6px rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
             }}
             .node-icon svg {{
-                width: 52px;
-                height: 52px;
+                width: 45px;
+                height: 45px;
                 fill: none;
                 stroke: currentColor;
                 stroke-width: 3.2;
@@ -1036,7 +1036,7 @@ def render_landing_navigation():
             .evidence-node strong {{
                 display: block;
                 color: #172126;
-                font-size: 21px;
+                font-size: clamp(18px, 1.55vw, 25px);
                 font-weight: 950;
                 line-height: 1.05;
                 text-align: center;
@@ -1045,7 +1045,7 @@ def render_landing_navigation():
             .evidence-node em {{
                 display: block;
                 color: #29383d;
-                font-size: 14px;
+                font-size: clamp(12px, 1.05vw, 16px);
                 font-style: normal;
                 font-weight: 850;
                 line-height: 1.18;
@@ -1059,7 +1059,7 @@ def render_landing_navigation():
                 border-radius: 999px;
                 background: rgba(255,255,255,0.75);
                 color: #17364a;
-                font-size: 12px;
+                font-size: clamp(10px, 0.85vw, 13px);
                 font-weight: 950;
                 text-align: center;
             }}
@@ -1131,19 +1131,7 @@ def render_landing_navigation():
             </div>
             {''.join(node_html)}
         </div>
-        <script>
-            function openCategory(category) {{
-                try {{
-                    window.top.location.href = "?category=" + category;
-                    return false;
-                }} catch (error) {{
-                    return true;
-                }}
-            }}
-        </script>
-        """,
-        height=790,
-        scrolling=False,
+        """
     )
 
 
