@@ -1,5 +1,116 @@
 import streamlit as st
 from ontology_graph import render_full_ontology_graph, render_ontology_graph
+import time
+
+def render_premium_loader():
+    """Render a sophisticated neural-network style loader for analysis steps."""
+    st.markdown(
+        """
+        <div class="loader-container">
+            <div class="neural-core">
+                <div class="core-inner"></div>
+                <div class="scan-line"></div>
+            </div>
+            <div class="loader-text">
+                <span class="status-kicker">ToxiGuard AI Engine</span>
+                <span class="status-main">Analyzing Evidence Relationships...</span>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+        <style>
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(18, 61, 97, 0.1);
+        }
+        .neural-core {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #123d61 0%, #0a1a26 100%);
+            box-shadow: 0 0 20px rgba(18, 61, 97, 0.4);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+        }
+        .core-inner {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f2c84b;
+            box-shadow: 0 0 15px #f2c84b;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        .scan-line {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(242, 200, 75, 0.4), transparent);
+            animation: scan 1.5s infinite linear;
+        }
+        .loader-text {
+            text-align: center;
+        }
+        .status-kicker {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: #236b9a;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.2rem;
+        }
+        .status-main {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #172126;
+            margin-bottom: 1rem;
+        }
+        .progress-bar-wrap {
+            width: 200px;
+            height: 4px;
+            background: #e0eef8;
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #123d61, #f2c84b);
+            animation: progress 2.5s infinite ease-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        @keyframes scan {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    time.sleep(0.8)
+
 
 st.set_page_config(
     page_title="Pharmaceutical Development Ontology",
@@ -688,170 +799,7 @@ def render_list_card(title, values, css_class="list-card"):
         unsafe_allow_html=True,
     )
 
-def render_premium_loader():
-    """Render a sophisticated neural-network style loader for analysis steps."""
-    st.markdown(
-        """
-        <div class="loader-container">
-            <div class="neural-core">
-                <div class="core-inner"></div>
-                <div class="scan-line"></div>
-            </div>
-            <div class="loader-text">
-                <span class="status-kicker">ToxiGuard AI Engine</span>
-                <span class="status-main">Analyzing Evidence Relationships...</span>
-                <div class="progress-bar-wrap">
-                    <div class="progress-bar-fill"></div>
-                </div>
-            </div>
-        </div>
-        <style>
-        .loader-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 0;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 1rem;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(18, 61, 97, 0.1);
-        }
-        .neural-core {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #123d61 0%, #0a1a26 100%);
-            box-shadow: 0 0 20px rgba(18, 61, 97, 0.4);
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-            display: grid;
-            place-items: center;
-        }
-        .core-inner {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f2c84b;
-            box-shadow: 0 0 15px #f2c84b;
-            animation: pulse 2s infinite ease-in-out;
-        }
-        .scan-line {
-            position: absolute;
-            top: -100%;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, transparent, rgba(242, 200, 75, 0.4), transparent);
-            animation: scan 1.5s infinite linear;
-        }
-        .loader-text {
-            text-align: center;
-        }
-        .status-kicker {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 900;
-            color: #236b9a;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 0.2rem;
-        }
-        .status-main {
-            display: block;
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: #172126;
-            margin-bottom: 1rem;
-        }
-        .progress-bar-wrap {
-            width: 200px;
-            height: 4px;
-            background: #e0eef8;
-            border-radius: 999px;
-            overflow: hidden;
-            margin: 0 auto;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            width: 0;
-            background: linear-gradient(90deg, #123d61, #f2c84b);
-            animation: progress 2.5s infinite ease-out;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 1; }
-        }
-        @keyframes scan {
-            0% { top: -100%; }
-            100% { top: 100%; }
-        }
-        @keyframes progress {
-            0% { width: 0; }
-            100% { width: 100%; }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    import time
-    time.sleep(0.8)
 
-
-def render_process_image(selected_category=None):
-    st.markdown(
-        """
-        <div class="ontology-visual-stage">
-            <div class="situation-panel">
-                <b>Situation Shortcuts</b>
-                <div class="situation-symbol">!</div>
-                <strong>Solving</strong>
-                <span>Start from the manufacturing problem.</span>
-            </div>
-            <div class="title-ribbon">
-                <h1>PHARMACEUTICAL DEVELOPMENT</h1>
-                <p>ONTOLOGY MAP & EVIDENCE NAVIGATOR</p>
-            </div>
-            <div class="ontology-mini-menu">
-                <b>Ontology Map</b>
-                <span>CMC</span>
-                <span>Regulatory</span>
-                <span>Quality</span>
-                <span>Lifecycle</span>
-            </div>
-            <div class="central-ribbon">
-                <strong>DEVELOPMENT EVIDENCE NAVIGATOR</strong>
-                <span>Material to Modern Evidence</span>
-            </div>
-            <div class="golden-thread"></div>
-            <div class="focus-orbit">
-                <strong>Evidence Core</strong>
-                <span>CMC · Quality · Risk · Submission</span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def open_category(category):
-    st.query_params["category"] = category
-    if "item" in st.query_params:
-        del st.query_params["item"]
-    if "playbook" in st.query_params:
-        del st.query_params["playbook"]
-    st.session_state.category = category
-    st.rerun()
-
-
-def open_playbook(playbook_key):
-    playbook = SITUATION_PLAYBOOKS[playbook_key]
-    st.query_params["category"] = playbook["category"]
-    st.query_params["item"] = playbook["item"]
-    st.query_params["playbook"] = playbook_key
-    st.session_state.category = playbook["category"]
-    st.rerun()
 
 
 def render_landing_navigation():
@@ -1389,53 +1337,63 @@ st.markdown(
             grid-template-columns: 1fr 1fr;
         }
     }
-    .navigator-hero {
-        position: relative;
-        overflow: hidden;
-        background:
-            linear-gradient(135deg, rgba(18, 61, 97, 0.96) 0%, rgba(23, 33, 38, 0.97) 48%, rgba(27, 139, 105, 0.94) 100%);
-        color: white;
-        padding: 2rem 2.2rem 1.4rem 2.2rem;
+    .landing-map-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(90deg, #123d61 0%, #172126 100%);
+        padding: 1.5rem 2rem;
         border-radius: 0.8rem;
-        border: 1px solid #1f4f5b;
-        box-shadow: 0 22px 48px rgba(8, 32, 51, 0.16);
-        margin-bottom: 1rem;
-    }
-    .navigator-hero:before {
-        content: "";
-        position: absolute;
-        right: -8rem;
-        top: -9rem;
-        width: 24rem;
-        height: 24rem;
-        border-radius: 50%;
-        background: rgba(242, 200, 75, 0.13);
-    }
-    .navigator-kicker {
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        color: #d8edf6;
-        padding: 0.3rem 0.6rem;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 900;
-        text-transform: uppercase;
-    }
-    .navigator-hero h1 {
-        position: relative;
-        margin: 0.75rem 0 0.45rem 0;
         color: white;
-        font-size: 3rem;
-        line-height: 1.05;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
-    .navigator-hero p {
+    .landing-map-hero section { text-align: center; }
+    .landing-map-hero h1 { font-size: 2.2rem; font-weight: 900; margin: 0; line-height: 1; }
+    .landing-map-hero p { font-size: 1rem; color: #b0bec5; margin: 0.4rem 0 0 0; }
+    .landing-map-hero div { display: flex; flex-direction: column; }
+    .landing-map-hero b { font-size: 0.8rem; text-transform: uppercase; color: #f2c84b; }
+    .landing-map-hero span { font-size: 0.85rem; color: #d1d9dd; }
+
+    .evidence-map-shell {
         position: relative;
-        max-width: 860px;
-        color: #d6e4df;
-        font-size: 1.05rem;
-        margin: 0 0 1.1rem 0;
+        padding: 1rem 0;
+        min-height: 40rem;
     }
+    .golden-path {
+        position: absolute;
+        z-index: 1;
+        left: 5%;
+        right: 5%;
+        height: 4px;
+        background: linear-gradient(90deg, #f2c84b 0%, #1b8b69 100%);
+        border-radius: 999px;
+    }
+    .golden-path-one { top: 9.5rem; }
+    .golden-path-two { top: 22rem; left: 10%; right: 10%; opacity: 0.5; }
+    .golden-path-three { top: 34.5rem; opacity: 0.3; }
+
+    .research-core {
+        width: 20rem;
+        height: 10rem;
+        background: radial-gradient(circle, #ffffff 0%, #f7fcff 100%);
+        border: 3px solid #f2c84b;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 40px rgba(242,200,75,0.45);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-align: center;
+    }
+    .research-core:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 60px rgba(242,200,75,0.7);
+    }
+    .research-core span { font-size: 0.9rem; font-weight: 900; color: #236b9a; text-transform: uppercase; }
+    .research-core b { font-size: 1.8rem; font-weight: 950; color: #172126; margin: 0.2rem 0; line-height: 1; }
+    .research-core i { font-size: 0.9rem; font-style: normal; font-weight: 700; color: #536064; }
     .hero-flow, .flow-spine, .map-midline {
         display: grid;
         align-items: center;
@@ -2078,8 +2036,18 @@ st.markdown(
 
 
 query_category = st.query_params.get("category")
+if query_category:
+    query_category = query_category.replace('+', ' ')
+
 query_item = st.query_params.get("item")
+if query_item:
+    query_item = query_item.replace('+', ' ')
+
 query_playbook = st.query_params.get("playbook")
+
+if "category" not in st.session_state:
+    st.session_state.category = "1. Drug Entity"
+
 if query_category in ONTOLOGY:
     st.session_state.category = query_category
 else:
