@@ -688,6 +688,116 @@ def render_list_card(title, values, css_class="list-card"):
         unsafe_allow_html=True,
     )
 
+def render_premium_loader():
+    """Render a sophisticated neural-network style loader for analysis steps."""
+    st.markdown(
+        """
+        <div class="loader-container">
+            <div class="neural-core">
+                <div class="core-inner"></div>
+                <div class="scan-line"></div>
+            </div>
+            <div class="loader-text">
+                <span class="status-kicker">ToxiGuard AI Engine</span>
+                <span class="status-main">Analyzing Evidence Relationships...</span>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+        <style>
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(18, 61, 97, 0.1);
+        }
+        .neural-core {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #123d61 0%, #0a1a26 100%);
+            box-shadow: 0 0 20px rgba(18, 61, 97, 0.4);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+        }
+        .core-inner {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f2c84b;
+            box-shadow: 0 0 15px #f2c84b;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        .scan-line {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, rgba(242, 200, 75, 0.4), transparent);
+            animation: scan 1.5s infinite linear;
+        }
+        .loader-text {
+            text-align: center;
+        }
+        .status-kicker {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: #236b9a;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.2rem;
+        }
+        .status-main {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #172126;
+            margin-bottom: 1rem;
+        }
+        .progress-bar-wrap {
+            width: 200px;
+            height: 4px;
+            background: #e0eef8;
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #123d61, #f2c84b);
+            animation: progress 2.5s infinite ease-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        @keyframes scan {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+        @keyframes progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    import time
+    time.sleep(0.8)
+
 
 def render_process_image(selected_category=None):
     st.markdown(
@@ -745,24 +855,24 @@ def open_playbook(playbook_key):
 
 
 def render_landing_navigation():
+    # ── Map Nodes Data (matches the image) ───────────────────────────────────
     map_nodes = [
-        ("1. Drug Entity", "01", "Material", "API · Product · Excipient", "ICH Q11 / Q7 / Q8"),
-        ("2. Pharmaceutical Development", "02", "Product Design", "QTPP · CQA · CMA/CPP", "ICH Q8 / Q9"),
-        ("3. Manufacturing Process", "03", "Manufacturing", "Unit Ops · Validation", "ICH Q10 / Q13"),
-        ("4. Quality System", "04", "Quality Evidence", "Spec · Method · Impurity", "ICH Q6 / Q2 / Q14"),
-        ("5. Stability", "05", "Stability", "Shelf Life · Storage", "ICH Q1"),
-        ("6. Safety and Efficacy", "06", "Benefit-Risk", "Nonclinical · Clinical", "ICH M3 / S / E"),
-        ("7. Regulatory Documentation", "07", "Submission", "CTD · DMF · QOS", "ICH M4 / PQ-CMC"),
-        ("8. Risk and Lifecycle", "08", "Lifecycle", "QRM · CAPA · Change", "ICH Q9 / Q10 / Q12"),
-        ("9. FDA Modernization", "09", "Modern Evidence", "Structured Data · AI · NAMs", "FDA / ICH"),
+        {"id": "1. Drug Entity", "num": "01", "title": "Material", "sub": "API · Product · Excipient", "ich": "ICH Q11 / Q7 / Q8", "class": "material"},
+        {"id": "2. Pharmaceutical Development", "num": "02", "title": "Product Design", "sub": "QTPP · CQA · CMA/CPP", "ich": "ICH Q8 / Q9", "class": "development"},
+        {"id": "3. Manufacturing Process", "num": "03", "title": "Manufacturing", "sub": "Unit Ops · Validation", "ich": "ICH Q10 / Q13", "class": "process"},
+        {"id": "4. Quality System", "num": "04", "title": "Quality Evidence", "sub": "Spec · Method · Impurity", "ich": "ICH Q6 / Q2 / Q14", "class": "quality"},
+        {"id": "5. Stability", "num": "05", "title": "Stability", "sub": "Shelf Life · Storage", "ich": "ICH Q1", "class": "stability"},
+        {"id": "6. Safety and Efficacy", "num": "06", "title": "Benefit-Risk", "sub": "Nonclinical · Clinical", "ich": "ICH M3 / S / E", "class": "safety"},
+        {"id": "7. Regulatory Documentation", "num": "07", "title": "Submission", "sub": "CTD · DMF · QOS", "ich": "ICH M4 / PQ-CMC", "class": "docs"},
+        {"id": "8. Risk and Lifecycle", "num": "08", "title": "Lifecycle", "sub": "QRM · CAPA · Change", "ich": "ICH Q9 / Q10 / Q12", "class": "lifecycle"},
+        {"id": "9. FDA Modernization", "num": "09", "title": "Modern Evidence", "sub": "Structured Data · AI · NAMs", "ich": "FDA / ICH", "class": "modern"},
     ]
 
-    def render_node_button(node, key_prefix):
-        category, number, title, objects, guides = node
-        label = f"{number}  {title}\n{objects}\n{guides}"
-        if st.button(label, key=f"{key_prefix}_{category}", help=f"Open {category} details"):
-            open_category(category)
+    # Helper to generate URL
+    def get_nav_url(cat_id):
+        return f"/?category={cat_id.replace(' ', '+')}"
 
+    # ── Hero Section ────────────────────────────────────────────────────────
     st.markdown(
         """
         <div class="landing-map-hero">
@@ -782,34 +892,97 @@ def render_landing_navigation():
         """,
         unsafe_allow_html=True,
     )
-    top_cols = st.columns([1.18, 1, 1, 1.08], gap="large")
-    for column, node in zip(top_cols, map_nodes[:4]):
-        with column:
-            render_node_button(node, "top_map")
 
-    st.markdown(
-        """
-        <div class="evidence-core-strip">
-            <span>Evidence Core</span>
-            <b>Control Strategy</b>
-            <i>Guideline-backed decisions</i>
+    # ── Premium Evidence Map Grid (HTML/CSS) ──────────────────────────────────
+    # Using a custom grid to match the image exactly
+    html_map = f"""
+    <div class="evidence-map-shell">
+        <!-- Connecting Threads -->
+        <div class="golden-path golden-path-one"></div>
+        <div class="golden-path golden-path-two"></div>
+        <div class="golden-path golden-path-three"></div>
+
+        <div class="evidence-grid">
+            <!-- Row 1: 01 - 04 -->
+            <a href="{get_nav_url(map_nodes[0]['id'])}" class="evidence-node {map_nodes[0]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[0]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[0]['title']}</strong>
+                <em>{map_nodes[0]['sub']}</em>
+                <small>{map_nodes[0]['ich']}</small>
+            </a>
+            <a href="{get_nav_url(map_nodes[1]['id'])}" class="evidence-node {map_nodes[1]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[1]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[1]['title']}</strong>
+                <em>{map_nodes[1]['sub']}</em>
+                <small>{map_nodes[1]['ich']}</small>
+            </a>
+            <a href="{get_nav_url(map_nodes[2]['id'])}" class="evidence-node {map_nodes[2]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[2]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[2]['title']}</strong>
+                <em>{map_nodes[2]['sub']}</em>
+                <small>{map_nodes[2]['ich']}</small>
+            </a>
+            <a href="{get_nav_url(map_nodes[3]['id'])}" class="evidence-node {map_nodes[3]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[3]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[3]['title']}</strong>
+                <em>{map_nodes[3]['sub']}</em>
+                <small>{map_nodes[3]['ich']}</small>
+            </a>
+
+            <!-- Row 2: Spacer, Core, Stability -->
+            <div style="grid-column: span 1;"></div>
+            <div style="grid-column: span 2; display: flex; align-items: center; justify-content: center; position: relative;">
+                <div class="research-core" style="cursor: pointer;" onclick="window.location.href='{get_nav_url(map_nodes[7]['id'])}'">
+                    <span>Evidence Core</span>
+                    <b>Control Strategy</b>
+                    <i>Guideline-backed decisions</i>
+                </div>
+            </div>
+            <a href="{get_nav_url(map_nodes[4]['id'])}" class="evidence-node {map_nodes[4]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[4]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[4]['title']}</strong>
+                <em>{map_nodes[4]['sub']}</em>
+                <small>{map_nodes[4]['ich']}</small>
+            </a>
+
+            <!-- Row 3: 06, 07, 08, 09 -->
+            <a href="{get_nav_url(map_nodes[5]['id'])}" class="evidence-node {map_nodes[5]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[5]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[5]['title']}</strong>
+                <em>{map_nodes[5]['sub']}</em>
+                <small>{map_nodes[5]['ich']}</small>
+            </a>
+            <a href="{get_nav_url(map_nodes[6]['id'])}" class="evidence-node {map_nodes[6]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[6]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[6]['title']}</strong>
+                <em>{map_nodes[6]['sub']}</em>
+                <small>{map_nodes[6]['ich']}</small>
+            </a>
+            <a href="{get_nav_url(map_nodes[7]['id'])}" class="evidence-node {map_nodes[7]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[7]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[7]['title']}</strong>
+                <em>{map_nodes[7]['sub']}</em>
+                <small>{map_nodes[7]['ich']}</small>
+            </a>
+            <a href="{get_nav_url(map_nodes[8]['id'])}" class="evidence-node {map_nodes[8]['class']}" target="_self">
+                <div class="node-badge">{map_nodes[8]['num']}</div>
+                <div class="node-icon"></div>
+                <strong>{map_nodes[8]['title']}</strong>
+                <em>{map_nodes[8]['sub']}</em>
+                <small>{map_nodes[8]['ich']}</small>
+            </a>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    lower_left, lower_mid, lower_right = st.columns([1.25, 1.85, 1.1], gap="large")
-    with lower_left:
-        render_node_button(map_nodes[5], "bottom_map")
-    with lower_mid:
-        mid_a, mid_b = st.columns(2, gap="large")
-        with mid_a:
-            render_node_button(map_nodes[6], "bottom_map")
-        with mid_b:
-            render_node_button(map_nodes[7], "bottom_map")
-    with lower_right:
-        render_node_button(map_nodes[4], "bottom_map")
-        render_node_button(map_nodes[8], "bottom_map")
+    </div>
+    """
+    st.markdown(html_map, unsafe_allow_html=True)
 
 
 st.markdown(
@@ -1160,129 +1333,120 @@ st.markdown(
         position: relative;
         z-index: 3;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 1rem;
-        margin-top: 2rem;
-        padding: 1rem 0.6rem 0.4rem 0.6rem;
-    }
-    .map-spacer {
-        grid-column: 1 / -1;
-        min-height: 9.4rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        padding: 2rem 0;
     }
     .evidence-node {
         position: relative;
-        display: grid;
-        min-height: 12rem;
-        align-content: start;
-        gap: 0.42rem;
-        padding: 1rem;
-        border-radius: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-height: 14rem;
+        padding: 1.8rem 1rem 1.2rem 1rem;
+        border-radius: 1.2rem;
         color: #172126;
         text-decoration: none;
-        overflow: hidden;
-        isolation: isolate;
-        border: 2px solid rgba(255,255,255,0.76);
-        box-shadow: 0 18px 36px rgba(8, 32, 51, 0.13);
-        transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255,255,255,0.8);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.06);
     }
     .evidence-node:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 24px 48px rgba(8, 32, 51, 0.2);
-        filter: saturate(1.08);
+        transform: translateY(-6px);
+        box-shadow: 0 18px 36px rgba(0,0,0,0.12);
         text-decoration: none;
-    }
-    .evidence-node:before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -2;
-        background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.68) 100%);
-    }
-    .evidence-node:after {
-        content: "";
-        position: absolute;
-        right: -3.5rem;
-        bottom: -3.7rem;
-        width: 10rem;
-        height: 10rem;
-        z-index: -1;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.35);
+        filter: brightness(1.02);
     }
     .node-badge {
         position: absolute;
-        left: 0.9rem;
-        top: 0.85rem;
+        left: -0.6rem;
+        top: -0.6rem;
+        width: 2.2rem;
+        height: 2.2rem;
         display: grid;
         place-items: center;
-        width: 2.4rem;
-        height: 2.4rem;
-        border-radius: 50%;
+        background: #123d61;
         color: white;
-        background: rgba(18, 61, 97, 0.94);
-        font-size: 1rem;
-        font-weight: 950;
-        box-shadow: 0 8px 18px rgba(8,32,51,0.22);
+        border-radius: 50%;
+        font-weight: 900;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(18,61,97,0.3);
+        z-index: 5;
     }
     .node-icon {
-        display: grid;
-        place-items: center;
-        width: 5.6rem;
-        height: 5.6rem;
-        margin: 1.45rem auto 0.2rem auto;
+        width: 4.5rem;
+        height: 4.5rem;
+        background: white;
         border-radius: 50%;
-        background: rgba(255,255,255,0.84);
-        border: 2px solid rgba(255,255,255,0.92);
-        box-shadow: inset 0 0 0 0.35rem rgba(255,255,255,0.4), 0 10px 20px rgba(8,32,51,0.11);
-    }
-    .node-icon svg {
-        width: 3.7rem;
-        height: 3.7rem;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 3.2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+        margin-bottom: 1rem;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
     }
     .evidence-node strong {
-        display: block;
-        color: #172126;
-        font-size: 1.35rem;
-        font-weight: 950;
-        line-height: 1.05;
-        text-align: center;
+        font-size: 1.4rem;
+        font-weight: 900;
+        color: #1a1a1a;
+        margin-bottom: 0.3rem;
+        line-height: 1.1;
     }
     .evidence-node em {
-        display: block;
-        color: #29383d;
-        font-size: 0.92rem;
+        font-size: 0.95rem;
         font-style: normal;
-        font-weight: 850;
-        line-height: 1.18;
-        text-align: center;
-        min-height: 2.1rem;
+        font-weight: 700;
+        color: #4a4a4a;
+        margin-bottom: auto;
     }
     .evidence-node small {
-        display: inline-grid;
-        justify-self: center;
-        margin-top: auto;
-        padding: 0.32rem 0.58rem;
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.3rem 0.8rem;
+        background: rgba(255,255,255,0.8);
         border-radius: 999px;
-        background: rgba(255,255,255,0.75);
-        color: #17364a;
+        font-weight: 900;
         font-size: 0.75rem;
-        font-weight: 950;
-        text-align: center;
+        color: #123d61;
+        text-transform: uppercase;
     }
-    .evidence-node.material { background: linear-gradient(135deg, #dff2fb 0%, #7eb4d4 100%); color: #236b9a; }
-    .evidence-node.development { background: linear-gradient(135deg, #e2f5ec 0%, #63b798 100%); color: #1f6f55; }
-    .evidence-node.process { background: linear-gradient(135deg, #fff0d9 0%, #f39b2f 100%); color: #9a4f19; }
-    .evidence-node.quality { background: linear-gradient(135deg, #e2f4eb 0%, #54a57a 100%); color: #176f58; }
-    .evidence-node.stability { background: linear-gradient(135deg, #fff1d5 0%, #df9c3c 100%); color: #9a6a1f; }
-    .evidence-node.safety { background: linear-gradient(135deg, #e0eef8 0%, #6aa0c9 100%); color: #174b78; }
-    .evidence-node.docs { background: linear-gradient(135deg, #e4f4ed 0%, #4da47b 100%); color: #1f6f55; }
-    .evidence-node.lifecycle { background: linear-gradient(135deg, #fff0df 0%, #e78533 100%); color: #ad5b22; }
-    .evidence-node.modern { background: linear-gradient(135deg, #e8e5f3 0%, #5f78b8 100%); color: #3a4c8a; }
+
+    /* Pastel Gradients to match the image */
+    .evidence-node.material { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); }
+    .evidence-node.development { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); }
+    .evidence-node.process { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); }
+    .evidence-node.quality { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); }
+    .evidence-node.stability { background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); grid-column: 4; grid-row: 2; }
+    .evidence-node.safety { background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%); }
+    .evidence-node.docs { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); }
+    .evidence-node.lifecycle { background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%); }
+    .evidence-node.modern { background: linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%); }
+
+    .research-core {
+        width: 18rem;
+        height: 8rem;
+        background: radial-gradient(circle, #ffffff 0%, #f7fcff 100%);
+        border: 2px solid #f2c84b;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 30px rgba(242,200,75,0.4);
+        transition: transform 0.2s;
+    }
+    .research-core:hover { transform: scale(1.05); }
+    .research-core span { font-size: 0.8rem; font-weight: 900; color: #236b9a; text-transform: uppercase; }
+    .research-core b { font-size: 1.6rem; font-weight: 900; color: #1a1a1a; margin: 0.2rem 0; }
+    .research-core i { font-size: 0.85rem; font-style: normal; font-weight: 700; color: #536064; }
+
+    .golden-path {
+        position: absolute;
+        height: 4px;
+        background: linear-gradient(90deg, #f2c84b, #1b8b69);
+        border-radius: 999px;
+        z-index: 1;
+    }
+    .golden-path-one { top: 7rem; left: 10%; right: 10%; }
+    .golden-path-two { top: 18rem; left: 15%; right: 15%; opacity: 0.6; }
+    .golden-path-three { top: 29rem; left: 10%; right: 10%; opacity: 0.4; }
     @media (max-width: 980px) {
         .evidence-map-shell {
             min-height: auto;
@@ -2058,6 +2222,7 @@ with st.sidebar:
     st.divider()
     st.caption("Use the menu above as the ontology tree. The selected item opens its detail page.")
 
+render_premium_loader()
 
 category_data = ONTOLOGY[category]
 item_data = category_data["items"][item]
